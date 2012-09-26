@@ -20,7 +20,7 @@ my $ebug = undef;
 my $requester = undef;
 my $programName = undef;
 
-# ABSTRACT: communication module for the program to debug
+# ABSTRACT: communication module for debuging processes
 
 sub init{
     my($progName) = @_;

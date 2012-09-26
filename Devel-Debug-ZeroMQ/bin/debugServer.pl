@@ -76,7 +76,7 @@ sub getDebuggingInfos {
 
     $returnedData->{processesInfo} = \%processesInfos;
 
-    if (exists $files{$pid}){
+    if (defined $pid && exists $files{$pid}){
         my $file = $files{$pid};
 
         $returnedData->{sourceFileName } = $file->{fileName};
@@ -96,15 +96,19 @@ while (1) {
 
         if ($request->{type} eq $Devel::Debug::ZeroMQ::DEBUG_PROCESS_TYPE){ #message from a debugged process
             my $pid = updateProcessInfo($request);
-            print 'mon pid :'.$request->{pid}."\n";
+            #    print 'mon pid :'.$request->{pid}."\n";
 
             $messageToSend = {command       => $commands{$pid},
                               fileName      => $files{$pid}->{fileName} };
             $commands{$pid} = undef; #don't send the same command twice
         } elsif ($request->{type} eq $Devel::Debug::ZeroMQ::DEBUG_GUI_TYPE){ #message from the GUI
             my $command = $request->{command};
+            my $pid = $request->{pid};
+            if (defined $command && !defined $commands{$pid}){
+                $commands{$pid} = $command;
+            }
             
-            $messageToSend = getDebuggingInfos($request->{pid});
+            $messageToSend = getDebuggingInfos($pid);
         }
 
 
