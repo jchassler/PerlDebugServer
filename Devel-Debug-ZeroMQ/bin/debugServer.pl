@@ -104,8 +104,10 @@ while (1) {
         } elsif ($request->{type} eq $Devel::Debug::ZeroMQ::DEBUG_GUI_TYPE){ #message from the GUI
             my $command = $request->{command};
             my $pid = $request->{pid};
-            if (defined $command && !defined $commands{$pid}){
-                $commands{$pid} = $command;
+            if (defined $command){
+                if(!defined $commands{$pid}){
+                    $commands{$pid} = $command;
+                }
             }
             
             $messageToSend = getDebuggingInfos($pid);
@@ -115,5 +117,8 @@ while (1) {
 
         # Send reply back to client
         $responder->send(Storable::freeze($messageToSend));
+    }else{
+        usleep(500);
     }
+
 }

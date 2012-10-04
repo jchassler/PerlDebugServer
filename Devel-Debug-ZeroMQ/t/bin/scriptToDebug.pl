@@ -12,7 +12,9 @@ sub dummySubroutine($){
 
 my $dummyVariable = "dummy";
 
-for (my $i=0;1;$i++){
+my $infiniteLoop = 1;
+for (my $i=0;$infiniteLoop == 1;$i++){ #we are in a infinite loop except 
+                           #if someone modify $infiniteLoop with a debugger
     print $dummyVariable.$i."\n";
     my $computedValue = dummySubroutine($i);
     print "foo : ".$computedValue."\n";

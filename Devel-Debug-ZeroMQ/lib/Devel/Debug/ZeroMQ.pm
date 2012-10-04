@@ -12,6 +12,9 @@ our $READY_COMMAND = 'ready_command';
 our $RUN_COMMAND = 'r';
 our $STEP_COMMAND = 's';
 our $WAIT_COMMAND = 'WAIT_CMD';
+our $SET_BREAKPOINT_COMMAND = 'b';
+our $RETURN_COMMAND = 'return';
+our $EVAL_COMMAND = 'e';
 
 our $DEBUG_PROCESS_TYPE = 'DEBUG_PROCESS';
 our $DEBUG_GUI_TYPE = 'DEBUG_GUI';
@@ -43,6 +46,8 @@ sub initZeroMQ{
 sub sendAgentInfos {
     my($status) = @_;
     my @stackTrace = $ebug->stack_trace_human();
+    my $variables = $ebug->pad();
+    $variables = {} unless defined $variables;
     my $programInfo = { 
         pid         => $ebug->proc->pid ,
         name        => $programName ,
@@ -52,7 +57,7 @@ sub sendAgentInfos {
         fileName    => $ebug->filename,
        finished    =>  $ebug->finished,
        stackTrace  => \@stackTrace,
-       variables   => $ebug->pad,
+       variables   => $variables ,
        result      => $status->{result},
        fileContent => $status->{fileContent},
        type        => $Devel::Debug::ZeroMQ::DEBUG_PROCESS_TYPE,
@@ -114,7 +119,7 @@ sub loop {
                 $ebug->run;
             } elsif ($commandName eq 'restart') {
                 $ebug->load;
-            } elsif ($commandName eq /return/) {
+            } elsif ($commandName eq $RETURN_COMMAND) {
                 $ebug->return($arg1);
             } elsif ($commandName eq 'T') {
                 $result = $ebug->stack_trace_human;
@@ -130,12 +135,12 @@ sub loop {
                 exit;
             } elsif ($commandName eq 'x') {
                 $result = $ebug->eval("use YAML; Dump($arg1)") || "";
-            } elsif ($commandName eq 'e') {
+            } elsif ($commandName eq $EVAL_COMMAND) {
                 $result = $ebug->eval($arg1) || "";
             }
         }
         $status->{result} = $result;
-        usleep(50);
+        usleep(1000); #wait 1 ms
     }
 }
 
