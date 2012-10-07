@@ -1,4 +1,4 @@
-use Test::More tests=> 16;
+use Test::More tests=> 18;
 
 use strict;
 use warnings;
@@ -118,7 +118,17 @@ $debugData = sendCommandAndWait($processToDebugPID,100,
 $processInfos = $debugData->{processesInfo}{$processToDebugPID};
 is($processInfos->{variables}->{'$infiniteLoop'},0,'$infinite is now 0');
 
-$DB::single=1;
+is($processInfos->{finished},0, 'the script is not finished');
+
+
+#modify value of $infiniteLoop to alter script execution
+$debugData = sendCommandAndWait($processToDebugPID,300,
+            { command => $Devel::Debug::ZeroMQ::RUN_COMMAND });
+
+$processInfos = $debugData->{processesInfo}{$processToDebugPID};
+$DB::single = 1;
+
+is($processInfos->{finished},1, 'the script is finished because we changed the $infiniteLoop value.');
 
 #clean up processes
 undef $procServer;
