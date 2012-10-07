@@ -1,0 +1,119 @@
+use strict;
+use warnings;
+package Devel::Debug::ZeroMQ::Agent;
+
+use Devel::Debug::ZeroMQ;
+use Devel::ebug;
+
+use Time::HiRes qw(usleep nanosleep);
+
+my $ebug = undef;
+my $programName = undef;
+
+sub init{
+    my($progName) = @_;
+    $ebug = Devel::ebug->new;
+    my $programName = $progName;
+    $ebug->program($programName);
+    $ebug->backend("ebug_backend_perl");
+    $ebug->load;
+    Devel::Debug::ZeroMQ::initZeroMQ();
+}
+
+=head2  loop
+
+Start the inifinite loop to communicate with the debug server
+
+=cut
+sub loop {
+    my($progName) = @_;
+    
+    init($progName);
+    
+    my $status = { 
+        result  => undef,
+    };
+    
+    my $fileName = undef;
+    while (1){
+        my $fileContent = undef;
+        if (!defined $fileName || $fileName ne $ebug->filename()){
+            my @fileLines = $ebug->codelines();
+            $fileContent = \@fileLines;
+            $status->{fileContent} = $fileContent ;
+        }
+        my $message = Devel::Debug::ZeroMQ::Agent::sendAgentInfos($status);
+        
+        my $command = $message->{command};
+        my $result = undef ;
+
+        $fileName = $message->{fileName};
+
+        if (defined $command){
+            my $commandName = $command->{command};
+
+            my $arg1 = $command->{arg1};
+            my $arg2 = $command->{arg2};
+            my $arg3 = $command->{arg3};
+            
+
+            if ($commandName eq 'l') {
+                $result = $ebug->codelines($command->{arg1});
+            } elsif ($commandName eq 'p') {
+                $result = $ebug->pad;
+            } elsif ($commandName eq $Devel::Debug::ZeroMQ::STEP_COMMAND) {
+                $ebug->step;
+            } elsif ($commandName eq 'n') {
+                $ebug->next;
+            } elsif ($commandName eq $Devel::Debug::ZeroMQ::RUN_COMMAND) {
+                $ebug->run;
+            } elsif ($commandName eq 'restart') {
+                $ebug->load;
+            } elsif ($commandName eq $Devel::Debug::ZeroMQ::RETURN_COMMAND) {
+                $ebug->return($arg1);
+            } elsif ($commandName eq 'T') {
+                $result = $ebug->stack_trace_human;
+            } elsif ($commandName eq 'f') {
+                $result = $ebug->filenames;
+            } elsif ($commandName eq 'b') {
+                $ebug->break_point($arg1, $arg2, $arg3);
+            } elsif ($commandName eq 'd') {
+                $ebug->break_point_delete($arg1, $arg2);
+            } elsif ($commandName eq 'w') {
+                $ebug->watch_point($arg1);
+            } elsif ($commandName eq 'q') {
+                exit;
+            } elsif ($commandName eq 'x') {
+                $result = $ebug->eval("use YAML; Dump($arg1)") || "";
+            } elsif ($commandName eq $Devel::Debug::ZeroMQ::EVAL_COMMAND) {
+                $result = $ebug->eval($arg1) || "";
+            }
+        }
+        $status->{result} = $result;
+        usleep(1000); #wait 1 ms
+    }
+}
+
+sub sendAgentInfos {
+    my($status) = @_;
+    my @stackTrace = $ebug->stack_trace_human();
+    my $variables = $ebug->pad();
+    $variables = {} unless defined $variables;
+    my $programInfo = { 
+        pid         => $ebug->proc->pid ,
+        name        => $programName ,
+        line        => $ebug->line,
+        subroutine  => $ebug->subroutine,
+        package     => $ebug->package,
+        fileName    => $ebug->filename,
+       finished    =>  $ebug->finished,
+       stackTrace  => \@stackTrace,
+       variables   => $variables ,
+       result      => $status->{result},
+       fileContent => $status->{fileContent},
+       type        => $Devel::Debug::ZeroMQ::DEBUG_PROCESS_TYPE,
+    };
+    return Devel::Debug::ZeroMQ::send($programInfo);
+}
+
+1;

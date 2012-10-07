@@ -1,8 +1,8 @@
 use strict;
 use warnings;
-use Devel::Debug::ZeroMQ;
+use Devel::Debug::ZeroMQ::Agent;
 
 my $commandToLaunch = join(' ',@ARGV);
-Devel::Debug::ZeroMQ::loop($commandToLaunch);
+Devel::Debug::ZeroMQ::Agent::loop($commandToLaunch);
 
 
