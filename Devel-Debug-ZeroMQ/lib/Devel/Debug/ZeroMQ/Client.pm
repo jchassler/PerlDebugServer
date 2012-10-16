@@ -48,4 +48,72 @@ sub sendCommand {
    
 }
 
+=head2  step
+
+step($pid) : send the step command to the processus of pid $pid
+Return the debug informations
+
+=cut
+sub step {
+    my ($pid) = @_;
+    return Devel::Debug::ZeroMQ::Client::sendCommand($pid,
+            {
+            command => $Devel::Debug::ZeroMQ::STEP_COMMAND,
+    });
+}
+
+
+=head2  breakpoint
+
+breakpoint($pid,$file,$line) : set breakpoint 
+
+=cut
+sub breakPoint {
+    my ($processToDebugPID,$filePath,$lineNumber) = @_;
+    return Devel::Debug::ZeroMQ::Client::sendCommand($processToDebugPID,
+            {
+            command => $Devel::Debug::ZeroMQ::SET_BREAKPOINT_COMMAND,
+            arg1    => $filePath,
+            arg2    => $lineNumber,
+    });
+}
+
+=head2  run
+
+run() : continue program execution until breakpoint
+
+=cut
+sub run {
+    my ($pid) = @_;
+    return Devel::Debug::ZeroMQ::Client::sendCommand($pid,
+            { command => $Devel::Debug::ZeroMQ::RUN_COMMAND, });
+}
+
+=head2  return
+
+return($pid,$returnedValue) : cause script of pid $pid to return of current subroutine. Optionnaly you can specify the value returned with $returnedValue.
+
+=cut
+sub return {
+    my ($pid,$returnedValue) = @_;
+    my $command = { command => $Devel::Debug::ZeroMQ::RETURN_COMMAND} ;
+    if (defined $returnedValue){
+        $command ={ command => $Devel::Debug::ZeroMQ::RETURN_COMMAND,
+            arg1  => $returnedValue};
+    }
+    return Devel::Debug::ZeroMQ::Client::sendCommand($pid,$command);
+}
+
+
+=head2  eval
+
+eval($pid,$expression) : eval perl code contained into $expression in the script of pid $pid and returns the result
+
+=cut
+sub eval {
+    my ($pid,$expression) = @_;
+    return Devel::Debug::ZeroMQ::Client::sendCommand($pid,
+            { command => $Devel::Debug::ZeroMQ::EVAL_COMMAND, 
+              arg1    => $expression });
+}
 1;

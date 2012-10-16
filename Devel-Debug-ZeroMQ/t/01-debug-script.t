@@ -64,38 +64,26 @@ my $variables = $processInfos->{variables};
 is(scalar %$variables,0, 'we have no variable defined at this line of the script');
 
 #now time to do one step
-$debugData = Devel::Debug::ZeroMQ::Client::sendCommand($processToDebugPID,
-            {
-            command => $Devel::Debug::ZeroMQ::STEP_COMMAND,
-    });
+$debugData = Devel::Debug::ZeroMQ::Client::step($processToDebugPID);
 
-my $elapsedTime  =0;
 #wait for debug command to be executed
-while ($processInfos->{line} != 15 && $elapsedTime < 1000){
-    usleep(100000); $elapsedTime += 100;
-    $debugData = Devel::Debug::ZeroMQ::Client::refreshData();
-    $processInfos = $debugData->{processesInfo}{$processToDebugPID};
-}
+$debugData = waitMilliSecondAndRefreshData(200);
 
-$debugData = Devel::Debug::ZeroMQ::Client::refreshData();
 $processInfos = $debugData->{processesInfo}{$processToDebugPID};
-is($processInfos->{line},15,"we made a step in $elapsedTime ms");
+is($processInfos->{line},15,"we made a step in 200 ms");
 
 $variables = $processInfos->{variables};
 is($variables->{'$dummyVariable'},'dummy', 'we have one variable named $dummyVariable="dummy".');
 
 #now set a breakpoint
-$debugData = sendCommandAndWait($processToDebugPID,100,
-            {
-            command => $Devel::Debug::ZeroMQ::SET_BREAKPOINT_COMMAND,
-            arg1    => $scriptPath,
-            arg2    => 9,
-    });
+$debugData = Devel::Debug::ZeroMQ::Client::breakPoint($processToDebugPID,$scriptPath,9);
 
+$debugData = waitMilliSecondAndRefreshData(100);
 
 #launch again the process and wait for breakPoint to be reach
-$debugData = sendCommandAndWait($processToDebugPID,100,
-            { command => $Devel::Debug::ZeroMQ::RUN_COMMAND, });
+$debugData = Devel::Debug::ZeroMQ::Client::run($processToDebugPID);
+
+$debugData = waitMilliSecondAndRefreshData(100);
 
 $processInfos = $debugData->{processesInfo}{$processToDebugPID};
 is_deeply($processInfos->{stackTrace},['dummySubroutine(0)'],"we have the correct stackTrace");
@@ -103,17 +91,18 @@ $processInfos = $debugData->{processesInfo}{$processToDebugPID};
 is($processInfos->{line},9,"We are on the good line of subroutine.");
 
 #return from current subroutine
-$debugData = sendCommandAndWait($processToDebugPID,100,
-            { command => $Devel::Debug::ZeroMQ::RETURN_COMMAND });
+$debugData = Devel::Debug::ZeroMQ::Client::return($processToDebugPID);
+
+$debugData = waitMilliSecondAndRefreshData(100);
 
 $processInfos = $debugData->{processesInfo}{$processToDebugPID};
 is($processInfos->{line},20,"We returned from subroutine.");
 is($processInfos->{variables}->{'$infiniteLoop'},1,'$infinite is now 1');
 
 #modify value of $infiniteLoop to alter script execution
-$debugData = sendCommandAndWait($processToDebugPID,100,
-            { command => $Devel::Debug::ZeroMQ::EVAL_COMMAND, 
-              arg1    => '$infiniteLoop = 0' });
+$debugData = Devel::Debug::ZeroMQ::Client::eval($processToDebugPID,'$infiniteLoop = 0');
+
+$debugData = waitMilliSecondAndRefreshData(200);
 
 $processInfos = $debugData->{processesInfo}{$processToDebugPID};
 is($processInfos->{variables}->{'$infiniteLoop'},0,'$infinite is now 0');
@@ -122,11 +111,11 @@ is($processInfos->{finished},0, 'the script is not finished');
 
 
 #modify value of $infiniteLoop to alter script execution
-$debugData = sendCommandAndWait($processToDebugPID,300,
-            { command => $Devel::Debug::ZeroMQ::RUN_COMMAND });
+$debugData = Devel::Debug::ZeroMQ::Client::run($processToDebugPID);
+
+$debugData = waitMilliSecondAndRefreshData(300);
 
 $processInfos = $debugData->{processesInfo}{$processToDebugPID};
-$DB::single = 1;
 
 is($processInfos->{finished},1, 'the script is finished because we changed the $infiniteLoop value.');
 
@@ -134,16 +123,12 @@ is($processInfos->{finished},1, 'the script is finished because we changed the $
 undef $procServer;
 undef $processToDebug;
 
-sub sendCommandAndWait{
-    my ($processToDebugPID,$timeToWaitMilliSec,$command) = @_;
-
-    $debugData = Devel::Debug::ZeroMQ::Client::sendCommand($processToDebugPID, $command);
+sub waitMilliSecondAndRefreshData{
+    my ($timeToWaitMilliSec) = @_;
 
     usleep($timeToWaitMilliSec * 1000); #wait for breakPoint to be reach
 
-    $debugData = Devel::Debug::ZeroMQ::Client::refreshData();
-
-    return $debugData;
+    return Devel::Debug::ZeroMQ::Client::refreshData();
 }
 
 1; #script completed !
