@@ -22,6 +22,9 @@ my %commands = ();
 #a hash containing source files
 my %files = ();
 
+my $breakPointVersion = 0;
+my $breakPoints = {};
+
 =head2  updateProcessInfo
 
     Update informations of the process into the process table
@@ -86,6 +89,26 @@ sub getDebuggingInfos {
     return $returnedData;
 }
 
+sub setBreakPoint{
+    my ($command)=@_;
+    my $file = $command->{arg1};
+    my $lineNumber = $command->{arg2}; 
+
+    $breakPointVersion ++;
+    $breakPoints->{$file}{$lineNumber} = 1;#condition always true for now
+}
+
+sub removeBreakPoint{
+    my ($command)=@_;
+    my $file = $command->{arg1};
+    my $lineNumber = $command->{arg2}; 
+
+    $breakPointVersion ++;
+    if (exists $breakPoints->{$file} && exists $breakPoints->{$file}{$lineNumber}){
+        delete $breakPoints->{$file}{$lineNumber};
+    }
+}
+
 while (1) {
     # Wait for the next request from client
     my $message = $responder->recv();
@@ -96,16 +119,25 @@ while (1) {
 
         if ($request->{type} eq $Devel::Debug::ZeroMQ::DEBUG_PROCESS_TYPE){ #message from a debugged process
             my $pid = updateProcessInfo($request);
-            #    print 'mon pid :'.$request->{pid}."\n";
 
             $messageToSend = {command       => $commands{$pid},
-                              fileName      => $files{$pid}->{fileName} };
+                              fileName      => $files{$pid}->{fileName},
+                              breakPoints  => $breakPoints,
+                              breakPointVersion => $breakPointVersion,
+                          };
             $commands{$pid} = undef; #don't send the same command twice
         } elsif ($request->{type} eq $Devel::Debug::ZeroMQ::DEBUG_GUI_TYPE){ #message from the GUI
             my $command = $request->{command};
             my $pid = $request->{pid};
             if (defined $command){
-                if(!defined $commands{$pid}){
+                if ($command->{command} 
+                    eq $Devel::Debug::ZeroMQ::SET_BREAKPOINT_COMMAND){
+                    setBreakPoint($command);
+                }elsif ($command->{command} 
+                    eq $Devel::Debug::ZeroMQ::REMOVE_BREAKPOINT_COMMAND){
+                    removeBreakPoint($command);
+
+                }elsif(!defined $commands{$pid}){
                     $commands{$pid} = $command;
                 }
             }

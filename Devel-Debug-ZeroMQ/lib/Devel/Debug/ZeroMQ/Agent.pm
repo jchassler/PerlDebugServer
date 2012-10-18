@@ -9,6 +9,38 @@ use Time::HiRes qw(usleep nanosleep);
 
 my $ebug = undef;
 my $programName = undef;
+my $breakPointsVersion = -1; #the version of the breakpoints
+
+#keep the breakpoint list up-to-date with the debug server
+sub updateBreakPoints {
+    my ($breakPointsServerVersion,$breakPointsList) = @_;
+
+    if ($breakPointsServerVersion == $breakPointsVersion){
+        return; #first check if there were no modification since last time
+    }
+
+    $breakPointsVersion = $breakPointsServerVersion;
+    my @breakPoints = $ebug->all_break_points_with_condition();
+    foreach my $breakPoint (@breakPoints) {
+
+        #suppress all useless breakpoints
+        my $file = $breakPoint->{filename};
+        my $line = $breakPoint->{filename}; 
+        my $condition = $breakPoint->{condition}; 
+        if (!exists $breakPointsList->{$file} 
+            && !exists $breakPointsList->{$file}{$line}){
+            $ebug->break_point_delete($file,$line);
+        }
+    }
+
+    #add all remaining breakpoints
+    foreach my $file (keys %$breakPointsList) {
+        foreach my $line (keys %{$breakPointsList->{$file}}) {
+            $ebug->break_point($file,$line);
+        }
+    }
+
+}
 
 sub init{
     my($progName) = @_;
@@ -48,6 +80,8 @@ sub loop {
         my $result = undef ;
 
         $fileName = $message->{fileName};
+
+        updateBreakPoints($message->{breakPointVersion}, $message->{breakPoints});
 
         if (defined $command){
             my $commandName = $command->{command};
@@ -112,6 +146,7 @@ sub sendAgentInfos {
        result      => $status->{result},
        fileContent => $status->{fileContent},
        type        => $Devel::Debug::ZeroMQ::DEBUG_PROCESS_TYPE,
+       breakPointVersion => $breakPointsVersion,
     };
     return Devel::Debug::ZeroMQ::send($programInfo);
 }

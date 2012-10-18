@@ -69,8 +69,8 @@ breakpoint($pid,$file,$line) : set breakpoint
 
 =cut
 sub breakPoint {
-    my ($processToDebugPID,$filePath,$lineNumber) = @_;
-    return Devel::Debug::ZeroMQ::Client::sendCommand($processToDebugPID,
+    my ($filePath,$lineNumber) = @_;
+    return Devel::Debug::ZeroMQ::Client::sendCommand(undef,
             {
             command => $Devel::Debug::ZeroMQ::SET_BREAKPOINT_COMMAND,
             arg1    => $filePath,

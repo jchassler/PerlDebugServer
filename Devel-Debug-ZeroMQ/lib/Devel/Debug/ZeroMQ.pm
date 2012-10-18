@@ -12,6 +12,7 @@ our $RUN_COMMAND = 'r';
 our $STEP_COMMAND = 's';
 our $WAIT_COMMAND = 'WAIT_CMD';
 our $SET_BREAKPOINT_COMMAND = 'b';
+our $REMOVE_BREAKPOINT_COMMAND = 'remove_command';
 our $RETURN_COMMAND = 'return';
 our $EVAL_COMMAND = 'e';
 

@@ -1,4 +1,4 @@
-use Test::More tests=> 18;
+use Test::More tests=> 19;
 
 use strict;
 use warnings;
@@ -50,9 +50,7 @@ if (!$processToDebugOption){
     is(scalar @processesIDs,3,"we have 3 processes to debug");
 }
 
-if (!defined $processToDebugPID){
-    $processToDebugPID = $processesIDs[0];
-}
+$processToDebugPID = $processesIDs[0];
 
 my $processInfos = $debugData->{processesInfo}{$processToDebugPID};
 
@@ -76,7 +74,7 @@ $variables = $processInfos->{variables};
 is($variables->{'$dummyVariable'},'dummy', 'we have one variable named $dummyVariable="dummy".');
 
 #now set a breakpoint
-$debugData = Devel::Debug::ZeroMQ::Client::breakPoint($processToDebugPID,$scriptPath,9);
+$debugData = Devel::Debug::ZeroMQ::Client::breakPoint($scriptPath,9);
 
 $debugData = waitMilliSecondAndRefreshData(100);
 
@@ -89,6 +87,16 @@ $processInfos = $debugData->{processesInfo}{$processToDebugPID};
 is_deeply($processInfos->{stackTrace},['dummySubroutine(0)'],"we have the correct stackTrace");
 $processInfos = $debugData->{processesInfo}{$processToDebugPID};
 is($processInfos->{line},9,"We are on the good line of subroutine.");
+
+my $processToDebugPID2 = $processesIDs[1];
+#the breakpoint must be set on all processes
+$debugData = Devel::Debug::ZeroMQ::Client::run($processToDebugPID2);
+
+$debugData = waitMilliSecondAndRefreshData(100);
+
+$processInfos = $debugData->{processesInfo}{$processToDebugPID2};
+is($processInfos->{line},9,"We are on the good line of subroutine in the second script ; breakpoints are set on all scripts.");
+
 
 #return from current subroutine
 $debugData = Devel::Debug::ZeroMQ::Client::return($processToDebugPID);
