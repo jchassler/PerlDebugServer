@@ -65,7 +65,7 @@ sub step {
 
 =head2  breakpoint
 
-breakpoint($pid,$file,$line) : set breakpoint 
+breakpoint($file,$line) : set breakpoint 
 
 =cut
 sub breakPoint {
@@ -75,6 +75,21 @@ sub breakPoint {
             command => $Devel::Debug::ZeroMQ::SET_BREAKPOINT_COMMAND,
             arg1    => $filePath,
             arg2    => $lineNumber,
+    });
+}
+
+=head2  removeBreakPoint
+
+removeBreakPoint($file,$line)
+
+=cut
+sub removeBreakPoint {
+    my ($file,$line) = @_;
+    return Devel::Debug::ZeroMQ::Client::sendCommand(undef,
+            {
+            command => $Devel::Debug::ZeroMQ::REMOVE_BREAKPOINT_COMMAND,
+            arg1    => $file,
+            arg2    => $line,
     });
 }
 

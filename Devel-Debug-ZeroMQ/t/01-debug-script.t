@@ -1,4 +1,4 @@
-use Test::More tests=> 19;
+use Test::More tests=> 20;
 
 use strict;
 use warnings;
@@ -126,6 +126,19 @@ $debugData = waitMilliSecondAndRefreshData(300);
 $processInfos = $debugData->{processesInfo}{$processToDebugPID};
 
 is($processInfos->{finished},1, 'the script is finished because we changed the $infiniteLoop value.');
+
+#now test if we can remove a breakpoint
+$debugData = Devel::Debug::ZeroMQ::Client::removeBreakPoint($scriptPath,9);
+$debugData = Devel::Debug::ZeroMQ::Client::breakPoint($scriptPath,15);
+
+my $processToDebugPID3 = $processesIDs[2];
+#the breakpoint must be set on all processes
+$debugData = Devel::Debug::ZeroMQ::Client::run($processToDebugPID3);
+
+$debugData = waitMilliSecondAndRefreshData(100);
+
+$processInfos = $debugData->{processesInfo}{$processToDebugPID3};
+is($processInfos->{line},15, "Manage to remove a breakpoint.");
 
 #clean up processes
 undef $procServer;

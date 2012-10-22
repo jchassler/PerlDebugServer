@@ -10,6 +10,8 @@ use Time::HiRes qw(usleep nanosleep);
 my $ebug = undef;
 my $programName = undef;
 my $breakPointsVersion = -1; #the version of the breakpoints
+my $lastEvalCommand = '';
+my $lastEvalResult = '';
 
 #keep the breakpoint list up-to-date with the debug server
 sub updateBreakPoints {
@@ -96,10 +98,13 @@ sub loop {
             } elsif ($commandName eq 'p') {
                 $result = $ebug->pad;
             } elsif ($commandName eq $Devel::Debug::ZeroMQ::STEP_COMMAND) {
+                clearEvalResult();
                 $ebug->step;
             } elsif ($commandName eq 'n') {
+                clearEvalResult();
                 $ebug->next;
             } elsif ($commandName eq $Devel::Debug::ZeroMQ::RUN_COMMAND) {
+                clearEvalResult();
                 $ebug->run;
             } elsif ($commandName eq 'restart') {
                 $ebug->load;
@@ -118,15 +123,28 @@ sub loop {
             } elsif ($commandName eq 'q') {
                 exit;
             } elsif ($commandName eq 'x') {
-                $result = $ebug->eval("use YAML; Dump($arg1)") || "";
+                $lastEvalCommand = $arg1;
+                $lastEvalResult = $ebug->eval("use YAML; Dump($arg1)") || "";
             } elsif ($commandName eq $Devel::Debug::ZeroMQ::EVAL_COMMAND) {
-                $result = $ebug->eval($arg1) || "";
+                $lastEvalCommand = $arg1;
+                $lastEvalResult = $ebug->eval($arg1) || "";
             }
         }
         $status->{result} = $result;
         usleep(1000); #wait 1 ms
     }
 }
+
+=head2  clearEvalResult
+
+clear the last 'eval' command result (usefull when the program continues)
+
+=cut
+sub clearEvalResult {
+    $lastEvalCommand = '';
+    $lastEvalResult  = '';
+}
+
 
 sub sendAgentInfos {
     my($status) = @_;
