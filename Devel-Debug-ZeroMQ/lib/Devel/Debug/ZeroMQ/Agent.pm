@@ -127,7 +127,7 @@ sub loop {
                 $lastEvalResult = $ebug->eval("use YAML; Dump($arg1)") || "";
             } elsif ($commandName eq $Devel::Debug::ZeroMQ::EVAL_COMMAND) {
                 $lastEvalCommand = $arg1;
-                $lastEvalResult = $ebug->eval($arg1) || "";
+                $lastEvalResult = $ebug->eval($arg1) ;
             }
         }
         $status->{result} = $result;
@@ -165,6 +165,8 @@ sub sendAgentInfos {
        fileContent => $status->{fileContent},
        type        => $Devel::Debug::ZeroMQ::DEBUG_PROCESS_TYPE,
        breakPointVersion => $breakPointsVersion,
+       lastEvalCommand => $lastEvalCommand,
+       lastEvalResult => $lastEvalResult,
     };
     return Devel::Debug::ZeroMQ::send($programInfo);
 }

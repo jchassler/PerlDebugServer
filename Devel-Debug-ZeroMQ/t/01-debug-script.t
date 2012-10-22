@@ -1,4 +1,4 @@
-use Test::More tests=> 20;
+use Test::More tests=> 24;
 
 use strict;
 use warnings;
@@ -116,6 +116,8 @@ $processInfos = $debugData->{processesInfo}{$processToDebugPID};
 is($processInfos->{variables}->{'$infiniteLoop'},0,'$infinite is now 0');
 
 is($processInfos->{finished},0, 'the script is not finished');
+is($processInfos->{lastEvalCommand},'$infiniteLoop = 0', "the last eval command is '\$infiniteLoop = 0'");
+is($processInfos->{lastEvalResult},'0', "the last eval result is '0'");
 
 
 #modify value of $infiniteLoop to alter script execution
@@ -126,6 +128,8 @@ $debugData = waitMilliSecondAndRefreshData(300);
 $processInfos = $debugData->{processesInfo}{$processToDebugPID};
 
 is($processInfos->{finished},1, 'the script is finished because we changed the $infiniteLoop value.');
+is($processInfos->{lastEvalCommand},'', "the last eval command is '' was cleaned when we sent the 'continue' command.");
+is($processInfos->{lastEvalResult},'', "the last eval was cleaned when we sent the 'continue' command.");
 
 #now test if we can remove a breakpoint
 $debugData = Devel::Debug::ZeroMQ::Client::removeBreakPoint($scriptPath,9);
@@ -138,7 +142,7 @@ $debugData = Devel::Debug::ZeroMQ::Client::run($processToDebugPID3);
 $debugData = waitMilliSecondAndRefreshData(100);
 
 $processInfos = $debugData->{processesInfo}{$processToDebugPID3};
-is($processInfos->{line},15, "Manage to remove a breakpoint.");
+is($processInfos->{line},15, "Manage to remove a breakpoint, we halted on next breakpoint.");
 
 #clean up processes
 undef $procServer;
