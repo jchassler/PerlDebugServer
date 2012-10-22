@@ -93,11 +93,7 @@ sub loop {
             my $arg3 = $command->{arg3};
             
 
-            if ($commandName eq 'l') {
-                $result = $ebug->codelines($command->{arg1});
-            } elsif ($commandName eq 'p') {
-                $result = $ebug->pad;
-            } elsif ($commandName eq $Devel::Debug::ZeroMQ::STEP_COMMAND) {
+            if ($commandName eq $Devel::Debug::ZeroMQ::STEP_COMMAND) {
                 clearEvalResult();
                 $ebug->step;
             } elsif ($commandName eq 'n') {
@@ -110,8 +106,6 @@ sub loop {
                 $ebug->load;
             } elsif ($commandName eq $Devel::Debug::ZeroMQ::RETURN_COMMAND) {
                 $ebug->return($arg1);
-            } elsif ($commandName eq 'T') {
-                $result = $ebug->stack_trace_human;
             } elsif ($commandName eq 'f') {
                 $result = $ebug->filenames;
             } elsif ($commandName eq 'b') {
