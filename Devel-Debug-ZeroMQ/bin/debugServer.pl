@@ -16,7 +16,14 @@ my $responder = $cxt->socket(ZeroMQ::Constants::ZMQ_REP);
 $responder->bind("tcp://127.0.0.1:5000");
 
 my %processesInfos = ();
+
 #commandes to send to process to debug (undef = nothing to do)
+#each command is as below
+#{command   => 'COMMAND_CODE',
+#  arg1     => 'first argument if needed',
+#  arg2     => 'second argument if needed',
+#  arg3     => 'third argument if needed'
+#  }
 my %commands = ();
 
 #a hash containing source files
@@ -64,6 +71,36 @@ sub updateProcessInfo {
         $file->{fileName} = $infos->{fileName};
     }
     return $pid;
+}
+
+=head2  setRunningProcessInfo
+
+C<setRunningProcessInfo($pid);>
+update the process info when we send the 'continue' command because the process won't update its status until it id finished or it reached a breakpoint
+
+=cut
+sub setRunningProcessInfo {
+    my ($pid) = @_;
+    my $processInfo = $processesInfos{$pid};
+
+    my $programInfo = { 
+        pid         => $processInfo->{pid} ,
+        name        => $processInfo->{name} , 
+        line        => '??',
+        subroutine  => '??',
+        package     => '??',
+        fileName    => '??',
+        finished    =>  $processInfo->{finished},
+        halted      =>  0,
+        stackTrace  => [],
+        variables   => {},
+        result      => '',
+        fileContent => $processInfo->{fileContent} , 
+        breakPointVersion => $processInfo->{breakPointVersion},
+        lastEvalCommand => '',
+        lastEvalResult => '',
+    };
+    $processesInfos{$pid} = $programInfo;
 }
 
 =head2  getDebuggingInfos
@@ -119,13 +156,18 @@ while (1) {
 
         if ($request->{type} eq $Devel::Debug::ZeroMQ::DEBUG_PROCESS_TYPE){ #message from a debugged process
             my $pid = updateProcessInfo($request);
-
-            $messageToSend = {command       => $commands{$pid},
+            
+            my $commandInfos= $commands{$pid};
+            $messageToSend = {command       =>  $commandInfos,
                               fileName      => $files{$pid}->{fileName},
                               breakPoints  => $breakPoints,
                               breakPointVersion => $breakPointVersion,
                           };
             $commands{$pid} = undef; #don't send the same command twice
+             if (defined $commandInfos 
+                 && $commandInfos eq $Devel::Debug::ZeroMQ::RUN_COMMAND){
+               setRunningProcessInfo($pid); 
+            }
         } elsif ($request->{type} eq $Devel::Debug::ZeroMQ::DEBUG_GUI_TYPE){ #message from the GUI
             my $command = $request->{command};
             my $pid = $request->{pid};

@@ -128,12 +128,13 @@ $debugData = waitMilliSecondAndRefreshData(300);
 $processInfos = $debugData->{processesInfo}{$processToDebugPID};
 
 is($processInfos->{finished},1, 'the script is finished because we changed the $infiniteLoop value.');
-is($processInfos->{lastEvalCommand},'', "the last eval command is '' was cleaned when we sent the 'continue' command.");
-is($processInfos->{lastEvalResult},'', "the last eval was cleaned when we sent the 'continue' command.");
+is($processInfos->{lastEvalCommand},'', "the last eval command is ''; it was cleaned when we sent the 'continue' command.");
+is($processInfos->{lastEvalResult},'', "the last eval result was cleaned when we sent the 'continue' command.");
 
 #now test if we can remove a breakpoint
 $debugData = Devel::Debug::ZeroMQ::Client::removeBreakPoint($scriptPath,9);
-$debugData = Devel::Debug::ZeroMQ::Client::breakPoint($scriptPath,15);
+$debugData = waitMilliSecondAndRefreshData(100);
+$debugData = Devel::Debug::ZeroMQ::Client::breakPoint($scriptPath,10);
 
 my $processToDebugPID3 = $processesIDs[2];
 #the breakpoint must be set on all processes
@@ -142,7 +143,17 @@ $debugData = Devel::Debug::ZeroMQ::Client::run($processToDebugPID3);
 $debugData = waitMilliSecondAndRefreshData(100);
 
 $processInfos = $debugData->{processesInfo}{$processToDebugPID3};
-is($processInfos->{line},15, "Manage to remove a breakpoint, we halted on next breakpoint.");
+is($processInfos->{line},10, "Manage to remove a breakpoint, we halted on next breakpoint.");
+is($processInfos->{halted},1, "process is halted.");
+
+#launch again the process 
+$debugData = Devel::Debug::ZeroMQ::Client::run($processToDebugPID3);
+
+$debugData = waitMilliSecondAndRefreshData(100);
+
+$processInfos = $debugData->{processesInfo}{$processToDebugPID3};
+is($processInfos->{halted},0, "process is running.");
+is($processInfos->{line},'??', "For a running process line number is '??'.");
 
 #clean up processes
 undef $procServer;

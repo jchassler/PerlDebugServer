@@ -27,10 +27,10 @@ sub updateBreakPoints {
 
         #suppress all useless breakpoints
         my $file = $breakPoint->{filename};
-        my $line = $breakPoint->{filename}; 
+        my $line = $breakPoint->{line}; 
         my $condition = $breakPoint->{condition}; 
-        if (!exists $breakPointsList->{$file} 
-            && !exists $breakPointsList->{$file}{$line}){
+        if (!(exists $breakPointsList->{$file} 
+            && exists $breakPointsList->{$file}{$line})){
             $ebug->break_point_delete($file,$line);
         }
     }
@@ -153,6 +153,7 @@ sub sendAgentInfos {
         package     => $ebug->package,
         fileName    => $ebug->filename,
        finished    =>  $ebug->finished,
+       halted       => 1,  #program wait debugging commands
        stackTrace  => \@stackTrace,
        variables   => $variables ,
        result      => $status->{result},
