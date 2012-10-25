@@ -6,6 +6,7 @@ use Devel::Debug::ZeroMQ;
 use Devel::ebug;
 
 use Time::HiRes qw(usleep nanosleep);
+use File::Spec;
 
 my $ebug = undef;
 my $programName = undef;
@@ -27,6 +28,9 @@ sub updateBreakPoints {
 
         #suppress all useless breakpoints
         my $file = $breakPoint->{filename};
+        if (! File::Spec->file_name_is_absolute( $file )){
+            $file = File::Spec->rel2abs( $file ) ;
+        }
         my $line = $breakPoint->{line}; 
         my $condition = $breakPoint->{condition}; 
         if (!(exists $breakPointsList->{$file} 
@@ -41,7 +45,7 @@ sub updateBreakPoints {
             $ebug->break_point($file,$line);
         }
     }
-
+    return;
 }
 
 sub init{

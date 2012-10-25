@@ -1,4 +1,4 @@
-use Test::More tests=> 24;
+use Test::More tests=> 27;
 
 use strict;
 use warnings;
@@ -133,8 +133,7 @@ is($processInfos->{lastEvalResult},'', "the last eval result was cleaned when we
 
 #now test if we can remove a breakpoint
 $debugData = Devel::Debug::ZeroMQ::Client::removeBreakPoint($scriptPath,9);
-$debugData = waitMilliSecondAndRefreshData(100);
-$debugData = Devel::Debug::ZeroMQ::Client::breakPoint($scriptPath,10);
+$debugData = Devel::Debug::ZeroMQ::Client::breakPoint($scriptPath,20);
 
 my $processToDebugPID3 = $processesIDs[2];
 #the breakpoint must be set on all processes
@@ -143,10 +142,11 @@ $debugData = Devel::Debug::ZeroMQ::Client::run($processToDebugPID3);
 $debugData = waitMilliSecondAndRefreshData(100);
 
 $processInfos = $debugData->{processesInfo}{$processToDebugPID3};
-is($processInfos->{line},10, "Manage to remove a breakpoint, we halted on next breakpoint.");
+is($processInfos->{line},20, "Manage to remove a breakpoint, we halted on next breakpoint.");
 is($processInfos->{halted},1, "process is halted.");
 
 #launch again the process 
+$debugData = Devel::Debug::ZeroMQ::Client::removeBreakPoint($scriptPath,20);
 $debugData = Devel::Debug::ZeroMQ::Client::run($processToDebugPID3);
 
 $debugData = waitMilliSecondAndRefreshData(100);

@@ -9,6 +9,7 @@ use Data::Dumper;
 use Storable;
 use Devel::Debug::ZeroMQ;
 use JSON;
+use File::Spec;
 
 
 my $cxt = ZeroMQ::Context->new;
@@ -130,6 +131,9 @@ sub setBreakPoint{
     my ($command)=@_;
     my $file = $command->{arg1};
     my $lineNumber = $command->{arg2}; 
+    if (! File::Spec->file_name_is_absolute( $file )){
+        $file =  File::Spec->rel2abs( $file ) ;
+    }
 
     $breakPointVersion ++;
     $breakPoints->{$file}{$lineNumber} = 1;#condition always true for now
@@ -164,8 +168,8 @@ while (1) {
                               breakPointVersion => $breakPointVersion,
                           };
             $commands{$pid} = undef; #don't send the same command twice
-             if (defined $commandInfos 
-                 && $commandInfos eq $Devel::Debug::ZeroMQ::RUN_COMMAND){
+            if (defined $commandInfos  && defined $commandInfos->{command}
+                 && $commandInfos->{command} eq $Devel::Debug::ZeroMQ::RUN_COMMAND){
                setRunningProcessInfo($pid); 
             }
         } elsif ($request->{type} eq $Devel::Debug::ZeroMQ::DEBUG_GUI_TYPE){ #message from the GUI
