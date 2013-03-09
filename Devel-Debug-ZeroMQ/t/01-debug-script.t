@@ -1,4 +1,4 @@
-use Test::More tests=> 27;
+use Test::More tests=> 31;
 
 use strict;
 use warnings;
@@ -75,8 +75,19 @@ is($variables->{'$dummyVariable'},'dummy', 'we have one variable named $dummyVar
 
 #now set a breakpoint
 $debugData = Devel::Debug::ZeroMQ::Client::breakPoint($scriptPath,9);
+$debugData = Devel::Debug::ZeroMQ::Client::breakPoint($scriptPath,11); #invalid breakPoint
 
 $debugData = waitMilliSecondAndRefreshData(100);
+
+#check if we get the real line of the breapoints once they are set
+my $requestedBreakpoints = $debugData->{requestedBreakpoints};
+my $effectiveBreakpoints = $debugData->{effectiveBreakpoints};
+
+is($effectiveBreakpoints->{$scriptPath}{9},9,"first breakpoint is effectively on the requested line (number9).");
+is($effectiveBreakpoints->{$scriptPath}{11},13,"second breakpoint was set on line 13 instead of line 11 because is the the first that can be executed.");
+is($effectiveBreakpoints->{$scriptPath}{13},13,"The breakpoint automatically set on line 13 is well registered.");
+is($requestedBreakpoints->{$scriptPath}{13},1,"The breakpoint automatically set on line 13 is well registered on requested breakpoints.");
+
 
 #launch again the process and wait for breakPoint to be reach
 $debugData = Devel::Debug::ZeroMQ::Client::run($processToDebugPID);

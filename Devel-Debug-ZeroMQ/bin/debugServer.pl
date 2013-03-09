@@ -31,7 +31,8 @@ my %commands = ();
 my %files = ();
 
 my $breakPointVersion = 0;
-my $breakPoints = {};
+my $breakPoints = {}; #all the requested breakpoints
+my $effectiveBreakpoints = {}; #all the breakpoints effectively set, with their real line number
 
 =head2  updateProcessInfo
 
@@ -117,6 +118,10 @@ sub getDebuggingInfos {
 
     $returnedData->{processesInfo} = \%processesInfos;
 
+    $returnedData->{requestedBreakpoints} = $breakPoints ;
+    $returnedData->{effectiveBreakpoints} = $effectiveBreakpoints;
+
+
     if (defined $pid && exists $files{$pid}){
         my $file = $files{$pid};
 
@@ -147,6 +152,25 @@ sub removeBreakPoint{
     $breakPointVersion ++;
     if (exists $breakPoints->{$file} && exists $breakPoints->{$file}{$lineNumber}){
         delete $breakPoints->{$file}{$lineNumber};
+    }
+}
+
+
+sub updateEffectiveBreakpoints{
+    my ($effectiveBreakpointsList) = @_;
+
+    for my $breakpoint (@{$effectiveBreakpointsList}){
+        my $file=                 $breakpoint->{file};                  
+        my $requestedLineNumber =                 $breakpoint->{requestedLineNumber};
+        my $effectiveLineNumber=  $breakpoint->{effectiveLineNumber};
+        $effectiveBreakpoints->{$file}->{$requestedLineNumber} = $effectiveLineNumber ;
+        if ($effectiveLineNumber != $requestedLineNumber){
+            #we are in the case where where the requested line number wasn't on a breakable line, we correct the breakpoints info
+            #only %effectiveBreakpoints keep informations about invalid breakpoints
+            $effectiveBreakpoints->{$file}->{$effectiveLineNumber} = $effectiveLineNumber;
+            delete $breakPoints->{$file}{$requestedLineNumber};
+            $breakPoints->{$file}{$effectiveLineNumber} = 1;#condition always true for now
+        }
     }
 }
 
@@ -189,8 +213,11 @@ while (1) {
             }
             
             $messageToSend = getDebuggingInfos($pid);
+        } elsif ($request->{type} eq $Devel::Debug::ZeroMQ::DEBUG_BREAKPOINT_TYPE){ #breakpoint has been set in debugged process
+            updateEffectiveBreakpoints($request->{effectiveBreakpoints});
+            $messageToSend = {message =>"NOTHING TO SAY"};
         }
-
+ 
 
 
         # Send reply back to client

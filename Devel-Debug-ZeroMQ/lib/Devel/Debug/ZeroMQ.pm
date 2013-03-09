@@ -18,6 +18,7 @@ our $EVAL_COMMAND = 'e';
 
 our $DEBUG_PROCESS_TYPE = 'DEBUG_PROCESS';
 our $DEBUG_GUI_TYPE = 'DEBUG_GUI';
+our $DEBUG_BREAKPOINT_TYPE = 'DEBUG_BREAKPOINT_GUI';
 
 my $requester = undef;
 

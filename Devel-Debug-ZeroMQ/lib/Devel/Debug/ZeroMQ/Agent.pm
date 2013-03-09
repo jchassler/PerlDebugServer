@@ -39,11 +39,23 @@ sub updateBreakPoints {
         }
     }
 
+    my $effectiveBreakpointList = [];
+
     #add all remaining breakpoints
     foreach my $file (keys %$breakPointsList) {
         foreach my $line (keys %{$breakPointsList->{$file}}) {
-            $ebug->break_point($file,$line);
+            my $effectiveLineNumber = $ebug->break_point($file,$line);
+            if (defined $effectiveLineNumber){
+                push (@{$effectiveBreakpointList} ,
+                    {   file => $file, 
+                        requestedLineNumber => $line, 
+                        effectiveLineNumber => $effectiveLineNumber});
+            }
         }
+    }
+    if (scalar @{$effectiveBreakpointList} >0){
+        #we notify the server for each breakpoint effectly set, so the real line numbers are stored in the server
+        sendBreakPointsInfo($effectiveBreakpointList);
     }
     return;
 }
@@ -143,6 +155,14 @@ sub clearEvalResult {
     $lastEvalResult  = '';
 }
 
+sub sendBreakPointsInfo {
+    my($effectiveBreakPoints) = @_;
+    my $breakpointsInfo = { 
+       type        => $Devel::Debug::ZeroMQ::DEBUG_BREAKPOINT_TYPE,
+       effectiveBreakpoints => $effectiveBreakPoints
+    };
+    return Devel::Debug::ZeroMQ::send($breakpointsInfo);
+}
 
 sub sendAgentInfos {
     my($status) = @_;
