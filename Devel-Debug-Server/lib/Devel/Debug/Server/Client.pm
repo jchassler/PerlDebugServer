@@ -1,8 +1,8 @@
 use strict;
 use warnings;
-package Devel::Debug::ZeroMQ::Client;
+package Devel::Debug::Server::Client;
 
-use Devel::Debug::ZeroMQ;
+use Devel::Debug::Server;
 
 #Abstract the client module pour the GUI or CLI client
 
@@ -13,7 +13,7 @@ return all data necessary to display screen
 =cut
 sub refreshData {
 
-    my $req = { type => $Devel::Debug::ZeroMQ::DEBUG_GUI_TYPE
+    my $req = { type => $Devel::Debug::Server::DEBUG_GUI_TYPE
     };
     return sendCommand($req); #we just send a void command
 }
@@ -36,13 +36,13 @@ The command is of the form:
 sub sendCommand {
     my($pid,$command)= @_;
     
-    Devel::Debug::ZeroMQ::initZeroMQ();
+    Devel::Debug::Server::initZeroMQ();
 
-    my $req = { type => $Devel::Debug::ZeroMQ::DEBUG_GUI_TYPE,
+    my $req = { type => $Devel::Debug::Server::DEBUG_GUI_TYPE,
                 command => $command,
                 pid=> $pid,
     };
-    my $answer = Devel::Debug::ZeroMQ::send($req);
+    my $answer = Devel::Debug::Server::send($req);
 
     return $answer;
    
@@ -56,9 +56,9 @@ Return the debug informations
 =cut
 sub step {
     my ($pid) = @_;
-    return Devel::Debug::ZeroMQ::Client::sendCommand($pid,
+    return Devel::Debug::Server::Client::sendCommand($pid,
             {
-            command => $Devel::Debug::ZeroMQ::STEP_COMMAND,
+            command => $Devel::Debug::Server::STEP_COMMAND,
     });
 }
 
@@ -70,9 +70,9 @@ breakpoint($file,$line) : set breakpoint
 =cut
 sub breakPoint {
     my ($filePath,$lineNumber) = @_;
-    return Devel::Debug::ZeroMQ::Client::sendCommand(undef,
+    return Devel::Debug::Server::Client::sendCommand(undef,
             {
-            command => $Devel::Debug::ZeroMQ::SET_BREAKPOINT_COMMAND,
+            command => $Devel::Debug::Server::SET_BREAKPOINT_COMMAND,
             arg1    => $filePath,
             arg2    => $lineNumber,
     });
@@ -85,9 +85,9 @@ removeBreakPoint($file,$line)
 =cut
 sub removeBreakPoint {
     my ($file,$line) = @_;
-    return Devel::Debug::ZeroMQ::Client::sendCommand(undef,
+    return Devel::Debug::Server::Client::sendCommand(undef,
             {
-            command => $Devel::Debug::ZeroMQ::REMOVE_BREAKPOINT_COMMAND,
+            command => $Devel::Debug::Server::REMOVE_BREAKPOINT_COMMAND,
             arg1    => $file,
             arg2    => $line,
     });
@@ -100,8 +100,8 @@ run() : continue program execution until breakpoint
 =cut
 sub run {
     my ($pid) = @_;
-    return Devel::Debug::ZeroMQ::Client::sendCommand($pid,
-            { command => $Devel::Debug::ZeroMQ::RUN_COMMAND, });
+    return Devel::Debug::Server::Client::sendCommand($pid,
+            { command => $Devel::Debug::Server::RUN_COMMAND, });
 }
 
 =head2  return
@@ -111,12 +111,12 @@ return($pid,$returnedValue) : cause script of pid $pid to return of current subr
 =cut
 sub return {
     my ($pid,$returnedValue) = @_;
-    my $command = { command => $Devel::Debug::ZeroMQ::RETURN_COMMAND} ;
+    my $command = { command => $Devel::Debug::Server::RETURN_COMMAND} ;
     if (defined $returnedValue){
-        $command ={ command => $Devel::Debug::ZeroMQ::RETURN_COMMAND,
+        $command ={ command => $Devel::Debug::Server::RETURN_COMMAND,
             arg1  => $returnedValue};
     }
-    return Devel::Debug::ZeroMQ::Client::sendCommand($pid,$command);
+    return Devel::Debug::Server::Client::sendCommand($pid,$command);
 }
 
 
@@ -127,8 +127,8 @@ eval($pid,$expression) : eval perl code contained into $expression in the script
 =cut
 sub eval {
     my ($pid,$expression) = @_;
-    return Devel::Debug::ZeroMQ::Client::sendCommand($pid,
-            { command => $Devel::Debug::ZeroMQ::EVAL_COMMAND, 
+    return Devel::Debug::Server::Client::sendCommand($pid,
+            { command => $Devel::Debug::Server::EVAL_COMMAND, 
               arg1    => $expression });
 }
 1;

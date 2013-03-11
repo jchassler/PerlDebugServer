@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-package Devel::Debug::ZeroMQ;
+package Devel::Debug::Server;
 
 use ZeroMQ qw/:all/;
 use Time::HiRes qw(usleep nanosleep);

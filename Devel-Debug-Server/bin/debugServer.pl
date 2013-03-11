@@ -7,7 +7,7 @@ use Storable;
 use Data::Dumper;
 
 use Storable;
-use Devel::Debug::ZeroMQ;
+use Devel::Debug::Server;
 use JSON;
 use File::Spec;
 
@@ -182,7 +182,7 @@ while (1) {
         my $request = Storable::thaw($requestStr);
         my $messageToSend = undef;
 
-        if ($request->{type} eq $Devel::Debug::ZeroMQ::DEBUG_PROCESS_TYPE){ #message from a debugged process
+        if ($request->{type} eq $Devel::Debug::Server::DEBUG_PROCESS_TYPE){ #message from a debugged process
             my $pid = updateProcessInfo($request);
             
             my $commandInfos= $commands{$pid};
@@ -193,18 +193,18 @@ while (1) {
                           };
             $commands{$pid} = undef; #don't send the same command twice
             if (defined $commandInfos  && defined $commandInfos->{command}
-                 && $commandInfos->{command} eq $Devel::Debug::ZeroMQ::RUN_COMMAND){
+                 && $commandInfos->{command} eq $Devel::Debug::Server::RUN_COMMAND){
                setRunningProcessInfo($pid); 
             }
-        } elsif ($request->{type} eq $Devel::Debug::ZeroMQ::DEBUG_GUI_TYPE){ #message from the GUI
+        } elsif ($request->{type} eq $Devel::Debug::Server::DEBUG_GUI_TYPE){ #message from the GUI
             my $command = $request->{command};
             my $pid = $request->{pid};
             if (defined $command){
                 if ($command->{command} 
-                    eq $Devel::Debug::ZeroMQ::SET_BREAKPOINT_COMMAND){
+                    eq $Devel::Debug::Server::SET_BREAKPOINT_COMMAND){
                     setBreakPoint($command);
                 }elsif ($command->{command} 
-                    eq $Devel::Debug::ZeroMQ::REMOVE_BREAKPOINT_COMMAND){
+                    eq $Devel::Debug::Server::REMOVE_BREAKPOINT_COMMAND){
                     removeBreakPoint($command);
 
                 }elsif(!defined $commands{$pid}){
@@ -213,7 +213,7 @@ while (1) {
             }
             
             $messageToSend = getDebuggingInfos($pid);
-        } elsif ($request->{type} eq $Devel::Debug::ZeroMQ::DEBUG_BREAKPOINT_TYPE){ #breakpoint has been set in debugged process
+        } elsif ($request->{type} eq $Devel::Debug::Server::DEBUG_BREAKPOINT_TYPE){ #breakpoint has been set in debugged process
             updateEffectiveBreakpoints($request->{effectiveBreakpoints});
             $messageToSend = {message =>"NOTHING TO SAY"};
         }

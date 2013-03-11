@@ -7,7 +7,7 @@ use FindBin;
 use lib "$FindBin::Bin/../lib";
 use Proc::Background;
 use Time::HiRes qw(usleep nanosleep);
-use_ok("Devel::Debug::ZeroMQ::Client");
+use_ok("Devel::Debug::Server::Client");
 
 #with option "-debugAgentProcess" another command window will open for the process to debug
 my $cmdArg = $ARGV[0] || '';
@@ -42,7 +42,7 @@ ok($processToDebug->alive(), "process to debug is running");
 
 sleep 1; #wait for processes to register to debug server
 
-my $debugData = Devel::Debug::ZeroMQ::Client::refreshData();
+my $debugData = Devel::Debug::Server::Client::refreshData();
 
 my @processesIDs = keys %{$debugData->{processesInfo}};
 
@@ -62,7 +62,7 @@ my $variables = $processInfos->{variables};
 is(scalar %$variables,0, 'we have no variable defined at this line of the script');
 
 #now time to do one step
-$debugData = Devel::Debug::ZeroMQ::Client::step($processToDebugPID);
+$debugData = Devel::Debug::Server::Client::step($processToDebugPID);
 
 #wait for debug command to be executed
 $debugData = waitMilliSecondAndRefreshData(200);
@@ -74,8 +74,8 @@ $variables = $processInfos->{variables};
 is($variables->{'$dummyVariable'},'dummy', 'we have one variable named $dummyVariable="dummy".');
 
 #now set a breakpoint
-$debugData = Devel::Debug::ZeroMQ::Client::breakPoint($scriptPath,9);
-$debugData = Devel::Debug::ZeroMQ::Client::breakPoint($scriptPath,11); #invalid breakPoint
+$debugData = Devel::Debug::Server::Client::breakPoint($scriptPath,9);
+$debugData = Devel::Debug::Server::Client::breakPoint($scriptPath,11); #invalid breakPoint
 
 $debugData = waitMilliSecondAndRefreshData(100);
 
@@ -90,7 +90,7 @@ is($requestedBreakpoints->{$scriptPath}{13},1,"The breakpoint automatically set 
 
 
 #launch again the process and wait for breakPoint to be reach
-$debugData = Devel::Debug::ZeroMQ::Client::run($processToDebugPID);
+$debugData = Devel::Debug::Server::Client::run($processToDebugPID);
 
 $debugData = waitMilliSecondAndRefreshData(100);
 
@@ -101,7 +101,7 @@ is($processInfos->{line},9,"We are on the good line of subroutine.");
 
 my $processToDebugPID2 = $processesIDs[1];
 #the breakpoint must be set on all processes
-$debugData = Devel::Debug::ZeroMQ::Client::run($processToDebugPID2);
+$debugData = Devel::Debug::Server::Client::run($processToDebugPID2);
 
 $debugData = waitMilliSecondAndRefreshData(100);
 
@@ -110,7 +110,7 @@ is($processInfos->{line},9,"We are on the good line of subroutine in the second 
 
 
 #return from current subroutine
-$debugData = Devel::Debug::ZeroMQ::Client::return($processToDebugPID);
+$debugData = Devel::Debug::Server::Client::return($processToDebugPID);
 
 $debugData = waitMilliSecondAndRefreshData(100);
 
@@ -119,7 +119,7 @@ is($processInfos->{line},20,"We returned from subroutine.");
 is($processInfos->{variables}->{'$infiniteLoop'},1,'$infinite is now 1');
 
 #modify value of $infiniteLoop to alter script execution
-$debugData = Devel::Debug::ZeroMQ::Client::eval($processToDebugPID,'$infiniteLoop = 0');
+$debugData = Devel::Debug::Server::Client::eval($processToDebugPID,'$infiniteLoop = 0');
 
 $debugData = waitMilliSecondAndRefreshData(200);
 
@@ -132,7 +132,7 @@ is($processInfos->{lastEvalResult},'0', "the last eval result is '0'");
 
 
 #modify value of $infiniteLoop to alter script execution
-$debugData = Devel::Debug::ZeroMQ::Client::run($processToDebugPID);
+$debugData = Devel::Debug::Server::Client::run($processToDebugPID);
 
 $debugData = waitMilliSecondAndRefreshData(300);
 
@@ -143,12 +143,12 @@ is($processInfos->{lastEvalCommand},'', "the last eval command is ''; it was cle
 is($processInfos->{lastEvalResult},'', "the last eval result was cleaned when we sent the 'continue' command.");
 
 #now test if we can remove a breakpoint
-$debugData = Devel::Debug::ZeroMQ::Client::removeBreakPoint($scriptPath,9);
-$debugData = Devel::Debug::ZeroMQ::Client::breakPoint($scriptPath,20);
+$debugData = Devel::Debug::Server::Client::removeBreakPoint($scriptPath,9);
+$debugData = Devel::Debug::Server::Client::breakPoint($scriptPath,20);
 
 my $processToDebugPID3 = $processesIDs[2];
 #the breakpoint must be set on all processes
-$debugData = Devel::Debug::ZeroMQ::Client::run($processToDebugPID3);
+$debugData = Devel::Debug::Server::Client::run($processToDebugPID3);
 
 $debugData = waitMilliSecondAndRefreshData(100);
 
@@ -157,8 +157,8 @@ is($processInfos->{line},20, "Manage to remove a breakpoint, we halted on next b
 is($processInfos->{halted},1, "process is halted.");
 
 #launch again the process 
-$debugData = Devel::Debug::ZeroMQ::Client::removeBreakPoint($scriptPath,20);
-$debugData = Devel::Debug::ZeroMQ::Client::run($processToDebugPID3);
+$debugData = Devel::Debug::Server::Client::removeBreakPoint($scriptPath,20);
+$debugData = Devel::Debug::Server::Client::run($processToDebugPID3);
 
 $debugData = waitMilliSecondAndRefreshData(100);
 
@@ -175,7 +175,7 @@ sub waitMilliSecondAndRefreshData{
 
     usleep($timeToWaitMilliSec * 1000); #wait for breakPoint to be reach
 
-    return Devel::Debug::ZeroMQ::Client::refreshData();
+    return Devel::Debug::Server::Client::refreshData();
 }
 
 1; #script completed !

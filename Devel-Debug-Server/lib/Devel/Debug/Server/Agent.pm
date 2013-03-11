@@ -1,8 +1,8 @@
 use strict;
 use warnings;
-package Devel::Debug::ZeroMQ::Agent;
+package Devel::Debug::Server::Agent;
 
-use Devel::Debug::ZeroMQ;
+use Devel::Debug::Server;
 use Devel::ebug;
 
 use Time::HiRes qw(usleep nanosleep);
@@ -67,7 +67,7 @@ sub init{
     $ebug->program($programName);
     $ebug->backend("ebug_backend_perl");
     $ebug->load;
-    Devel::Debug::ZeroMQ::initZeroMQ();
+    Devel::Debug::Server::initZeroMQ();
 }
 
 =head2  loop
@@ -92,7 +92,7 @@ sub loop {
             $fileContent = \@fileLines;
             $status->{fileContent} = $fileContent ;
         }
-        my $message = Devel::Debug::ZeroMQ::Agent::sendAgentInfos($status);
+        my $message = Devel::Debug::Server::Agent::sendAgentInfos($status);
         
         my $command = $message->{command};
         my $result = undef ;
@@ -109,18 +109,18 @@ sub loop {
             my $arg3 = $command->{arg3};
             
 
-            if ($commandName eq $Devel::Debug::ZeroMQ::STEP_COMMAND) {
+            if ($commandName eq $Devel::Debug::Server::STEP_COMMAND) {
                 clearEvalResult();
                 $ebug->step;
             } elsif ($commandName eq 'n') {
                 clearEvalResult();
                 $ebug->next;
-            } elsif ($commandName eq $Devel::Debug::ZeroMQ::RUN_COMMAND) {
+            } elsif ($commandName eq $Devel::Debug::Server::RUN_COMMAND) {
                 clearEvalResult();
                 $ebug->run;
             } elsif ($commandName eq 'restart') {
                 $ebug->load;
-            } elsif ($commandName eq $Devel::Debug::ZeroMQ::RETURN_COMMAND) {
+            } elsif ($commandName eq $Devel::Debug::Server::RETURN_COMMAND) {
                 $ebug->return($arg1);
             } elsif ($commandName eq 'f') {
                 $result = $ebug->filenames;
@@ -135,7 +135,7 @@ sub loop {
             } elsif ($commandName eq 'x') {
                 $lastEvalCommand = $arg1;
                 $lastEvalResult = $ebug->eval("use YAML; Dump($arg1)") || "";
-            } elsif ($commandName eq $Devel::Debug::ZeroMQ::EVAL_COMMAND) {
+            } elsif ($commandName eq $Devel::Debug::Server::EVAL_COMMAND) {
                 $lastEvalCommand = $arg1;
                 $lastEvalResult = $ebug->eval($arg1) ;
             }
@@ -158,10 +158,10 @@ sub clearEvalResult {
 sub sendBreakPointsInfo {
     my($effectiveBreakPoints) = @_;
     my $breakpointsInfo = { 
-       type        => $Devel::Debug::ZeroMQ::DEBUG_BREAKPOINT_TYPE,
+       type        => $Devel::Debug::Server::DEBUG_BREAKPOINT_TYPE,
        effectiveBreakpoints => $effectiveBreakPoints
     };
-    return Devel::Debug::ZeroMQ::send($breakpointsInfo);
+    return Devel::Debug::Server::send($breakpointsInfo);
 }
 
 sub sendAgentInfos {
@@ -182,12 +182,12 @@ sub sendAgentInfos {
        variables   => $variables ,
        result      => $status->{result},
        fileContent => $status->{fileContent},
-       type        => $Devel::Debug::ZeroMQ::DEBUG_PROCESS_TYPE,
+       type        => $Devel::Debug::Server::DEBUG_PROCESS_TYPE,
        breakPointVersion => $breakPointsVersion,
        lastEvalCommand => $lastEvalCommand,
        lastEvalResult => $lastEvalResult,
     };
-    return Devel::Debug::ZeroMQ::send($programInfo);
+    return Devel::Debug::Server::send($programInfo);
 }
 
 1;
