@@ -21,7 +21,7 @@ if ( $cmdArg eq '-debugAgentProcess'){
 
 my $debugServerCommand = "perl -I$FindBin::Bin/../lib $FindBin::Bin/../bin/debugServer.pl";
 my $scriptPath = "$FindBin::Bin/bin/scriptToDebug.pl";
-my $processCommand = "perl -I$FindBin::Bin/../lib $FindBin::Bin/../bin/debugZeroMq.pl $FindBin::Bin/bin/scriptToDebug.pl"; 
+my $processCommand = "perl -I$FindBin::Bin/../lib $FindBin::Bin/../bin/debugAgent.pl $FindBin::Bin/bin/scriptToDebug.pl"; 
 my $debugProcessCommand = $processToDebugOption ? "perl -d -I$FindBin::Bin/../lib $FindBin::Bin/../bin/debugZeroMq.pl $FindBin::Bin/bin/scriptToDebug.pl" : $processCommand; 
 
 
