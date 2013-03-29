@@ -8,11 +8,22 @@ use Devel::ebug;
 use Time::HiRes qw(usleep nanosleep);
 use File::Spec;
 
+    use Data::Dumper;
+
 my $ebug = undef;
 my $programName = undef;
 my $breakPointsVersion = -1; #the version of the breakpoints
 my $lastEvalCommand = '';
 my $lastEvalResult = '';
+my %breakPointsToSet = ();
+
+sub absoluteName($){
+    my ($fileName)=@_;
+    if (! File::Spec->file_name_is_absolute( $fileName )){
+        $fileName = File::Spec->rel2abs( $fileName ) ;
+    }
+    return $fileName;
+}
 
 #keep the breakpoint list up-to-date with the debug server
 sub updateBreakPoints {
@@ -21,43 +32,87 @@ sub updateBreakPoints {
     if ($breakPointsServerVersion == $breakPointsVersion){
         return; #first check if there were no modification since last time
     }
+    trace("debug MAJ Bk!!");
 
     $breakPointsVersion = $breakPointsServerVersion;
     my @breakPoints = $ebug->all_break_points_with_condition();
     foreach my $breakPoint (@breakPoints) {
 
-        #suppress all useless breakpoints
-        my $file = $breakPoint->{filename};
-        if (! File::Spec->file_name_is_absolute( $file )){
-            $file = File::Spec->rel2abs( $file ) ;
-        }
+        my $file = absoluteName($breakPoint->{filename});
         my $line = $breakPoint->{line}; 
         my $condition = $breakPoint->{condition}; 
+        #suppress all breakpoints already set but no more needed
         if (!(exists $breakPointsList->{$file} 
             && exists $breakPointsList->{$file}{$line})){
+    trace("supprime!!");
+    trace("bkPt :" .Dumper( $breakPoint));
             $ebug->break_point_delete($file,$line);
         }
     }
 
     my $effectiveBreakpointList = [];
 
-    #add all remaining breakpoints
+    my @loadedFilenames    = ();
+    foreach my $loadedFile ($ebug->filenames()){
+       push @loadedFilenames, absoluteName($loadedFile); 
+    }
+    
+    #clean old list that will be rebuilt
+    %breakPointsToSet = () ;
+    #add all new breakpoints
     foreach my $file (keys %$breakPointsList) {
-        foreach my $line (keys %{$breakPointsList->{$file}}) {
-            my $effectiveLineNumber = $ebug->break_point($file,$line);
-            if (defined $effectiveLineNumber){
-                push (@{$effectiveBreakpointList} ,
-                    {   file => $file, 
-                        requestedLineNumber => $line, 
-                        effectiveLineNumber => $effectiveLineNumber});
-            }
+        if (grep {$_ eq $file} @loadedFilenames){
+            my $bkPointList = setBreakPointForFile($file,keys %{$breakPointsList->{$file}});
+            push @{$effectiveBreakpointList}, @{$bkPointList};
+        }else{
+            #the source file has not yet been loaded, 
+            #store breakpoints and break on file loadind
+            $breakPointsToSet{$file} = $breakPointsList->{$file} ;
+            $ebug->break_on_load($file);
         }
     }
-    if (scalar @{$effectiveBreakpointList} >0){
-        #we notify the server for each breakpoint effectly set, so the real line numbers are stored in the server
-        sendBreakPointsInfo($effectiveBreakpointList);
-    }
+    sendBreakPointsInfo($effectiveBreakpointList);
     return;
+}
+
+# set breakpoints on newly loaded file $file
+# return 1 if breakpoints were effectly set
+# return 0 otherwise
+sub setDelayedBreakPoints {
+    my ($file) = @_;
+    if (!exists $breakPointsToSet{$file}){
+        return 0;
+    }
+    my $fileBreakPoints = $breakPointsToSet{$file};
+    my $bkPointList = setBreakPointForFile($file,keys %{$fileBreakPoints});
+    delete $breakPointsToSet{$file};
+    trace("Delayd bk :" .Dumper( $bkPointList));
+    sendBreakPointsInfo($bkPointList);
+    return 1;
+}
+
+sub setBreakPointForFile($$){
+    my ($file,@line)=@_;
+    my $effectiveBreakpointList = [];
+    foreach my $line (@line) {
+        my $effectiveLineNumber = $ebug->break_point($file,$line);
+    trace("ajout!! [$file|$line]");
+        if (defined $effectiveLineNumber){
+            push (@{$effectiveBreakpointList} ,
+                {   file => $file, 
+                    requestedLineNumber => $line, 
+                    effectiveLineNumber => $effectiveLineNumber});
+        }
+    }
+    return $effectiveBreakpointList;
+}
+
+sub trace($){
+    my ($text)=@_;
+    open (my $fh,">>","/home/jeanpat/dev/zeroMQ/Devel-Debug-Server/trace.log");
+    $text = "[$$]".$text."\n";
+    print $fh $text;
+    close $fh;
 }
 
 sub init{
@@ -68,6 +123,21 @@ sub init{
     $ebug->backend("ebug_backend_perl");
     $ebug->load;
     Devel::Debug::Server::initZeroMQ();
+}
+
+=head2  run
+
+run the program until next breakpoint.
+
+=cut
+sub run {
+   #no params
+   my $continueRunning = 1;
+   while($continueRunning){
+        $ebug->run;
+        $continueRunning = setDelayedBreakPoints(absoluteName($ebug->filename));
+   }
+
 }
 
 =head2  loop
@@ -117,7 +187,7 @@ sub loop {
                 $ebug->next;
             } elsif ($commandName eq $Devel::Debug::Server::RUN_COMMAND) {
                 clearEvalResult();
-                $ebug->run;
+                run();
             } elsif ($commandName eq 'restart') {
                 $ebug->load;
             } elsif ($commandName eq $Devel::Debug::Server::RETURN_COMMAND) {
@@ -155,8 +225,12 @@ sub clearEvalResult {
     $lastEvalResult  = '';
 }
 
+#we notify the server for each breakpoint effectly set, so the real line numbers are stored in the server
 sub sendBreakPointsInfo {
     my($effectiveBreakPoints) = @_;
+    if (scalar @{$effectiveBreakPoints} <= 0){
+        return; #nothing to do
+    }
     my $breakpointsInfo = { 
        type        => $Devel::Debug::Server::DEBUG_BREAKPOINT_TYPE,
        effectiveBreakpoints => $effectiveBreakPoints
@@ -175,7 +249,7 @@ sub sendAgentInfos {
         line        => $ebug->line,
         subroutine  => $ebug->subroutine,
         package     => $ebug->package,
-        fileName    => $ebug->filename,
+        fileName    => absoluteName($ebug->filename),
        finished    =>  $ebug->finished,
        halted       => 1,  #program wait debugging commands
        stackTrace  => \@stackTrace,

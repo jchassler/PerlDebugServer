@@ -81,6 +81,7 @@ C<setRunningProcessInfo($pid);>
 update the process info when we send the 'continue' command because the process won't update its status until it id finished or it reached a breakpoint
 
 =cut
+
 sub setRunningProcessInfo {
     my ($pid) = @_;
     my $processInfo = $processesInfos{$pid};
@@ -156,10 +157,20 @@ sub removeBreakPoint{
 }
 
 
+sub trace($){
+    my ($text)=@_;
+    open (my $fh,">>","/home/jeanpat/dev/zeroMQ/Devel-Debug-Server/traceServer.log");
+    $text = "[$$]".$text."\n";
+    print $fh $text;
+    close $fh;
+}
+
 sub updateEffectiveBreakpoints{
     my ($effectiveBreakpointsList) = @_;
 
+    trace("effective list :" .Dumper( $effectiveBreakpointsList));
     for my $breakpoint (@{$effectiveBreakpointsList}){
+    trace("un breakPoint :" .Dumper( $breakpoint));
         my $file=                 $breakpoint->{file};                  
         my $requestedLineNumber =                 $breakpoint->{requestedLineNumber};
         my $effectiveLineNumber=  $breakpoint->{effectiveLineNumber};

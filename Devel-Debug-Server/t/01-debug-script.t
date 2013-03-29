@@ -22,7 +22,7 @@ if ( $cmdArg eq '-debugAgentProcess'){
 my $debugServerCommand = "perl -I$FindBin::Bin/../lib $FindBin::Bin/../bin/debugServer.pl";
 my $scriptPath = "$FindBin::Bin/bin/scriptToDebug.pl";
 my $processCommand = "perl -I$FindBin::Bin/../lib $FindBin::Bin/../bin/debugAgent.pl $FindBin::Bin/bin/scriptToDebug.pl"; 
-my $debugProcessCommand = $processToDebugOption ? "perl -d -I$FindBin::Bin/../lib $FindBin::Bin/../bin/debugZeroMq.pl $FindBin::Bin/bin/scriptToDebug.pl" : $processCommand; 
+my $debugProcessCommand = $processToDebugOption ? "perl -d -I$FindBin::Bin/../lib $FindBin::Bin/../bin/debugAgent.pl $FindBin::Bin/bin/scriptToDebug.pl" : $processCommand; 
 
 
 my $procServer = Proc::Background->new({'die_upon_destroy' => 1},$debugServerCommand);
@@ -77,7 +77,7 @@ is($variables->{'$dummyVariable'},'dummy', 'we have one variable named $dummyVar
 $debugData = Devel::Debug::Server::Client::breakPoint($scriptPath,9);
 $debugData = Devel::Debug::Server::Client::breakPoint($scriptPath,11); #invalid breakPoint
 
-$debugData = waitMilliSecondAndRefreshData(100);
+$debugData = waitMilliSecondAndRefreshData(200);
 
 #check if we get the real line of the breapoints once they are set
 my $requestedBreakpoints = $debugData->{requestedBreakpoints};
@@ -150,7 +150,7 @@ my $processToDebugPID3 = $processesIDs[2];
 #the breakpoint must be set on all processes
 $debugData = Devel::Debug::Server::Client::run($processToDebugPID3);
 
-$debugData = waitMilliSecondAndRefreshData(100);
+$debugData = waitMilliSecondAndRefreshData(300);
 
 $processInfos = $debugData->{processesInfo}{$processToDebugPID3};
 is($processInfos->{line},20, "Manage to remove a breakpoint, we halted on next breakpoint.");
@@ -160,7 +160,7 @@ is($processInfos->{halted},1, "process is halted.");
 $debugData = Devel::Debug::Server::Client::removeBreakPoint($scriptPath,20);
 $debugData = Devel::Debug::Server::Client::run($processToDebugPID3);
 
-$debugData = waitMilliSecondAndRefreshData(100);
+$debugData = waitMilliSecondAndRefreshData(300);
 
 $processInfos = $debugData->{processesInfo}{$processToDebugPID3};
 is($processInfos->{halted},0, "process is running.");
