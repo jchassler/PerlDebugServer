@@ -159,7 +159,7 @@ sub removeBreakPoint{
 
 sub trace($){
     my ($text)=@_;
-    open (my $fh,">>","/home/jeanpat/dev/zeroMQ/Devel-Debug-Server/traceServer.log");
+    open (my $fh,">>","./traceServer.log");
     $text = "[$$]".$text."\n";
     print $fh $text;
     close $fh;

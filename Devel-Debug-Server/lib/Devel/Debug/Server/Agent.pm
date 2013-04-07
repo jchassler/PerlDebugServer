@@ -109,7 +109,7 @@ sub setBreakPointForFile($$){
 
 sub trace($){
     my ($text)=@_;
-    open (my $fh,">>","/home/jeanpat/dev/zeroMQ/Devel-Debug-Server/trace.log");
+    open (my $fh,">>","./trace.log");
     $text = "[$$]".$text."\n";
     print $fh $text;
     close $fh;
