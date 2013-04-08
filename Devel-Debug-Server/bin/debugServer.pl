@@ -33,6 +33,7 @@ my %files = ();
 my $breakPointVersion = 0;
 my $breakPoints = {}; #all the requested breakpoints
 my $effectiveBreakpoints = {}; #all the breakpoints effectively set, with their real line number
+my $lastBreakPointsUpdate = 0; #the last breakpoint list version that was propagate
 
 =head2  updateProcessInfo
 
@@ -168,9 +169,7 @@ sub trace($){
 sub updateEffectiveBreakpoints{
     my ($effectiveBreakpointsList) = @_;
 
-    trace("effective list :" .Dumper( $effectiveBreakpointsList));
     for my $breakpoint (@{$effectiveBreakpointsList}){
-    trace("un breakPoint :" .Dumper( $breakpoint));
         my $file=                 $breakpoint->{file};                  
         my $requestedLineNumber =                 $breakpoint->{requestedLineNumber};
         my $effectiveLineNumber=  $breakpoint->{effectiveLineNumber};
@@ -233,8 +232,29 @@ while (1) {
 
         # Send reply back to client
         $responder->send(Storable::freeze($messageToSend));
+
+        propagateBreakPoints();
     }else{
         usleep(500);
     }
 
+}
+
+=head2  propagateBreakPoints
+
+propagate new breakpoints to all processes; running processes are interrupted so they update their breakpoints.
+
+=cut
+sub propagateBreakPoints {
+    if ($lastBreakPointsUpdate == $breakPointVersion){
+        return;
+    }
+    foreach my $pid (keys %processesInfos){
+        if ($processesInfos{$pid}{breakPointVersion} != $lastBreakPointsUpdate
+         && $processesInfos{$pid}{halted} == 0){
+             $commands{$pid} = { command => $Devel::Debug::Server::RUN_COMMAND };
+             kill ( 2 => $pid); #send SIGINT to force breakpoints refresh
+         }
+    }
+    $lastBreakPointsUpdate = $breakPointVersion;
 }

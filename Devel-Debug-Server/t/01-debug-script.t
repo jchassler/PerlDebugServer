@@ -1,4 +1,4 @@
-use Test::More tests=> 31;
+use Test::More tests=> 32;
 
 use strict;
 use warnings;
@@ -165,6 +165,14 @@ $debugData = waitMilliSecondAndRefreshData(300);
 $processInfos = $debugData->{processesInfo}{$processToDebugPID3};
 is($processInfos->{halted},0, "process is running.");
 is($processInfos->{line},'??', "For a running process line number is '??'.");
+
+#now set a breakpoint while program is running
+$debugData = Devel::Debug::Server::Client::breakPoint($scriptPath,9);
+
+$debugData = waitMilliSecondAndRefreshData(500);
+
+$processInfos = $debugData->{processesInfo}{$processToDebugPID3};
+is($processInfos->{line},9, "Breakpoint was effectively set while program was running'.");
 
 #clean up processes
 undef $procServer;
