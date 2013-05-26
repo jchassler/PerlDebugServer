@@ -260,6 +260,7 @@ sub sendAgentInfos {
        breakPointVersion => $breakPointsVersion,
        lastEvalCommand => $lastEvalCommand,
        lastEvalResult => $lastEvalResult,
+       lastUpdateTime  => [Time::HiRes::gettimeofday()],
     };
     return Devel::Debug::Server::send($programInfo);
 }

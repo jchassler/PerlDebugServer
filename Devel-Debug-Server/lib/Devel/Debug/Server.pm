@@ -15,6 +15,7 @@ our $SET_BREAKPOINT_COMMAND = 'b';
 our $REMOVE_BREAKPOINT_COMMAND = 'remove_command';
 our $RETURN_COMMAND = 'return';
 our $EVAL_COMMAND = 'e';
+our $SUSPEND_COMMAND = 'suspend';
 
 our $DEBUG_PROCESS_TYPE = 'DEBUG_PROCESS';
 our $DEBUG_GUI_TYPE = 'DEBUG_GUI';

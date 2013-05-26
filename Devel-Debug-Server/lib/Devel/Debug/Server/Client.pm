@@ -104,6 +104,16 @@ sub run {
             { command => $Devel::Debug::Server::RUN_COMMAND, });
 }
 
+=head2  suspend
+
+suspend the running process
+
+=cut
+sub suspend {
+    my ($pid) = @_;
+    return Devel::Debug::Server::Client::sendCommand($pid,
+            { command => $Devel::Debug::Server::SUSPEND_COMMAND });
+}
 =head2  return
 
 return($pid,$returnedValue) : cause script of pid $pid to return of current subroutine. Optionnaly you can specify the value returned with $returnedValue.

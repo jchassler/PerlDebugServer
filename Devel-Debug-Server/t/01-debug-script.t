@@ -1,4 +1,4 @@
-use Test::More tests=> 32;
+use Test::More tests=> 35;
 
 use strict;
 use warnings;
@@ -174,9 +174,29 @@ $debugData = waitMilliSecondAndRefreshData(500);
 $processInfos = $debugData->{processesInfo}{$processToDebugPID3};
 is($processInfos->{line},9, "Breakpoint was effectively set while program was running'.");
 
+#now test process monitoring
+$debugData = Devel::Debug::Server::Client::removeBreakPoint($scriptPath,9);
+$debugData = Devel::Debug::Server::Client::run($processToDebugPID3);
+$debugData = waitMilliSecondAndRefreshData(300);
+
+$processInfos = $debugData->{processesInfo}{$processToDebugPID3};
+is($processInfos->{halted},0, "process is running.");
+my $updateTime = $processInfos->{lastUpdateTime};
+
+$debugData = waitMilliSecondAndRefreshData(2000);
+$processInfos = $debugData->{processesInfo}{$processToDebugPID3};
+isnt(0,Time::HiRes::tv_interval($updateTime,$processInfos->{lastUpdateTime}),"process is running but we manage to check he's still alive");
+
+$debugData = Devel::Debug::Server::Client::suspend($processToDebugPID3);
+$debugData = waitMilliSecondAndRefreshData(300);
+$processInfos = $debugData->{processesInfo}{$processToDebugPID3};
+is($processInfos->{halted},1, "process is halted after we send the suspend command.");
+
 #clean up processes
 undef $procServer;
 undef $processToDebug;
+undef $processToDebug2;
+undef $processToDebug3;
 
 sub waitMilliSecondAndRefreshData{
     my ($timeToWaitMilliSec) = @_;
