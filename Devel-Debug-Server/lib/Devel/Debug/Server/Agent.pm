@@ -32,7 +32,6 @@ sub updateBreakPoints {
     if ($breakPointsServerVersion == $breakPointsVersion){
         return; #first check if there were no modification since last time
     }
-    trace("debug MAJ Bk!!");
 
     $breakPointsVersion = $breakPointsServerVersion;
     my @breakPoints = $ebug->all_break_points_with_condition();
@@ -44,8 +43,6 @@ sub updateBreakPoints {
         #suppress all breakpoints already set but no more needed
         if (!(exists $breakPointsList->{$file} 
             && exists $breakPointsList->{$file}{$line})){
-    trace("supprime!!");
-    trace("bkPt :" .Dumper( $breakPoint));
             $ebug->break_point_delete($file,$line);
         }
     }
@@ -86,7 +83,6 @@ sub setDelayedBreakPoints {
     my $fileBreakPoints = $breakPointsToSet{$file};
     my $bkPointList = setBreakPointForFile($file,keys %{$fileBreakPoints});
     delete $breakPointsToSet{$file};
-    trace("Delayd bk :" .Dumper( $bkPointList));
     sendBreakPointsInfo($bkPointList);
     return 1;
 }
@@ -96,7 +92,6 @@ sub setBreakPointForFile($$){
     my $effectiveBreakpointList = [];
     foreach my $line (@line) {
         my $effectiveLineNumber = $ebug->break_point($file,$line);
-    trace("ajout!! [$file|$line]");
         if (defined $effectiveLineNumber){
             push (@{$effectiveBreakpointList} ,
                 {   file => $file, 

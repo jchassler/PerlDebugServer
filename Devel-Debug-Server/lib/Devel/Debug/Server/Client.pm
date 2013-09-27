@@ -1,10 +1,12 @@
-use strict;
+use strict
 use warnings;
 package Devel::Debug::Server::Client;
 
 use Devel::Debug::Server;
 
-#Abstract the client module pour the GUI or CLI client
+# PODNAME: Client module
+
+# ABSTRACT: the client module for the GUI or CLI client
 
 =head2  refreshData
 

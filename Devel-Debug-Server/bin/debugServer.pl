@@ -1,3 +1,4 @@
+#!/usr/bin/env perl
 
 use strict;
 use warnings;
@@ -10,6 +11,10 @@ use Storable;
 use Devel::Debug::Server;
 use JSON;
 use File::Spec;
+
+# PODNAME: debugServer.pl
+
+# ABSTRACT: The server to centralize debugging informations
 
 
 my $cxt = ZeroMQ::Context->new;
@@ -235,6 +240,8 @@ sub propagateBreakPoints {
 
 
 #The main loop
+print "server is started...\n";
+
 while (1) {
     # Wait for the next request from client
     my $message = $responder->recv();
