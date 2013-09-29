@@ -3,15 +3,15 @@ use strict;
 use warnings;
 use Devel::Debug::Server::Agent;
 
+# PODNAME: debugAgent.pl
+
+# ABSTRACT: The devel::Debug agent
 
 my $commandToLaunch = join(' ',@ARGV);
 Devel::Debug::Server::Agent::loop($commandToLaunch);
 
 __END__
  
-# PODNAME: debugAgent.pl
-
-# ABSTRACT: The devel::Debug agent
  
 =head1 SYNOPSIS
 
