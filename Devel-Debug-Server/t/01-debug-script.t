@@ -62,7 +62,7 @@ my $variables = $processInfos->{variables};
 is(scalar %$variables,0, 'we have no variable defined at this line of the script');
 
 #now time to do one step
-$debugData = Devel::Debug::Server::Client::step($processToDebugPID);
+Devel::Debug::Server::Client::step($processToDebugPID);
 
 #wait for debug command to be executed
 $debugData = waitMilliSecondAndRefreshData(200);
@@ -74,8 +74,8 @@ $variables = $processInfos->{variables};
 is($variables->{'$dummyVariable'},'dummy', 'we have one variable named $dummyVariable="dummy".');
 
 #now set a breakpoint
-$debugData = Devel::Debug::Server::Client::breakPoint($scriptPath,9);
-$debugData = Devel::Debug::Server::Client::breakPoint($scriptPath,11); #invalid breakPoint
+Devel::Debug::Server::Client::breakPoint($scriptPath,9);
+Devel::Debug::Server::Client::breakPoint($scriptPath,11); #invalid breakPoint
 
 $debugData = waitMilliSecondAndRefreshData(200);
 
@@ -90,7 +90,7 @@ is($requestedBreakpoints->{$scriptPath}{13},1,"The breakpoint automatically set 
 
 
 #launch again the process and wait for breakPoint to be reach
-$debugData = Devel::Debug::Server::Client::run($processToDebugPID);
+Devel::Debug::Server::Client::run($processToDebugPID);
 
 $debugData = waitMilliSecondAndRefreshData(100);
 
@@ -101,7 +101,7 @@ is($processInfos->{line},9,"We are on the good line of subroutine.");
 
 my $processToDebugPID2 = $processesIDs[1];
 #the breakpoint must be set on all processes
-$debugData = Devel::Debug::Server::Client::run($processToDebugPID2);
+Devel::Debug::Server::Client::run($processToDebugPID2);
 
 $debugData = waitMilliSecondAndRefreshData(100);
 
@@ -110,7 +110,7 @@ is($processInfos->{line},9,"We are on the good line of subroutine in the second 
 
 
 #return from current subroutine
-$debugData = Devel::Debug::Server::Client::return($processToDebugPID);
+Devel::Debug::Server::Client::return($processToDebugPID);
 
 $debugData = waitMilliSecondAndRefreshData(100);
 
@@ -119,7 +119,7 @@ is($processInfos->{line},20,"We returned from subroutine.");
 is($processInfos->{variables}->{'$infiniteLoop'},1,'$infinite is now 1');
 
 #modify value of $infiniteLoop to alter script execution
-$debugData = Devel::Debug::Server::Client::eval($processToDebugPID,'$infiniteLoop = 0');
+Devel::Debug::Server::Client::eval($processToDebugPID,'$infiniteLoop = 0');
 
 $debugData = waitMilliSecondAndRefreshData(200);
 
@@ -132,7 +132,7 @@ is($processInfos->{lastEvalResult},'0', "the last eval result is '0'");
 
 
 #modify value of $infiniteLoop to alter script execution
-$debugData = Devel::Debug::Server::Client::run($processToDebugPID);
+Devel::Debug::Server::Client::run($processToDebugPID);
 
 $debugData = waitMilliSecondAndRefreshData(300);
 
@@ -143,12 +143,12 @@ is($processInfos->{lastEvalCommand},'', "the last eval command is ''; it was cle
 is($processInfos->{lastEvalResult},'', "the last eval result was cleaned when we sent the 'continue' command.");
 
 #now test if we can remove a breakpoint
-$debugData = Devel::Debug::Server::Client::removeBreakPoint($scriptPath,9);
-$debugData = Devel::Debug::Server::Client::breakPoint($scriptPath,20);
+ Devel::Debug::Server::Client::removeBreakPoint($scriptPath,9);
+ Devel::Debug::Server::Client::breakPoint($scriptPath,20);
 
 my $processToDebugPID3 = $processesIDs[2];
 #the breakpoint must be set on all processes
-$debugData = Devel::Debug::Server::Client::run($processToDebugPID3);
+Devel::Debug::Server::Client::run($processToDebugPID3);
 
 $debugData = waitMilliSecondAndRefreshData(300);
 
@@ -157,8 +157,8 @@ is($processInfos->{line},20, "Manage to remove a breakpoint, we halted on next b
 is($processInfos->{halted},1, "process is halted.");
 
 #launch again the process 
-$debugData = Devel::Debug::Server::Client::removeBreakPoint($scriptPath,20);
-$debugData = Devel::Debug::Server::Client::run($processToDebugPID3);
+Devel::Debug::Server::Client::removeBreakPoint($scriptPath,20);
+Devel::Debug::Server::Client::run($processToDebugPID3);
 
 $debugData = waitMilliSecondAndRefreshData(300);
 
@@ -167,7 +167,7 @@ is($processInfos->{halted},0, "process is running.");
 is($processInfos->{line},'??', "For a running process line number is '??'.");
 
 #now set a breakpoint while program is running
-$debugData = Devel::Debug::Server::Client::breakPoint($scriptPath,9);
+Devel::Debug::Server::Client::breakPoint($scriptPath,9);
 
 $debugData = waitMilliSecondAndRefreshData(500);
 
@@ -175,19 +175,19 @@ $processInfos = $debugData->{processesInfo}{$processToDebugPID3};
 is($processInfos->{line},9, "Breakpoint was effectively set while program was running'.");
 
 #now test process monitoring
-$debugData = Devel::Debug::Server::Client::removeBreakPoint($scriptPath,9);
-$debugData = Devel::Debug::Server::Client::run($processToDebugPID3);
+Devel::Debug::Server::Client::removeBreakPoint($scriptPath,9);
+Devel::Debug::Server::Client::run($processToDebugPID3);
 $debugData = waitMilliSecondAndRefreshData(300);
 
 $processInfos = $debugData->{processesInfo}{$processToDebugPID3};
 is($processInfos->{halted},0, "process is running.");
 my $updateTime = $processInfos->{lastUpdateTime};
 
-$debugData = waitMilliSecondAndRefreshData(2000);
+$debugData = waitMilliSecondAndRefreshData(3000);
 $processInfos = $debugData->{processesInfo}{$processToDebugPID3};
 isnt(0,Time::HiRes::tv_interval($updateTime,$processInfos->{lastUpdateTime}),"process is running but we manage to check he's still alive");
 
-$debugData = Devel::Debug::Server::Client::suspend($processToDebugPID3);
+Devel::Debug::Server::Client::suspend($processToDebugPID3);
 $debugData = waitMilliSecondAndRefreshData(300);
 $processInfos = $debugData->{processesInfo}{$processToDebugPID3};
 is($processInfos->{halted},1, "process is halted after we send the suspend command.");

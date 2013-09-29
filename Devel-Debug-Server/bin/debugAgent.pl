@@ -2,9 +2,7 @@
 use strict;
 use warnings;
 use Devel::Debug::Server::Agent;
-# PODNAME: debugAgent.pl
 
-# ABSTRACT: The devel::Debug agent
 
 my $commandToLaunch = join(' ',@ARGV);
 Devel::Debug::Server::Agent::loop($commandToLaunch);
@@ -19,13 +17,13 @@ __END__
 
 #on command-line
 
-#... first launch the debug server
+#... first launch the debug server (only once)
 
 tom@house:debugServer.pl 
 
 server is started...
 
-#now launch your script to debug
+#now launch your script(s) to debug 
 
 tom@house:debugAgent.pl path/to/scriptToDebug.pl
 
@@ -33,6 +31,7 @@ tom@house:debugAgent.pl path/to/scriptToDebug.pl
 
 tom@house:debugAgent.pl path/to/scriptToDebug.pl arg1 arg2 ...
 
+#now you can send debug commands with the Devel::Debug::Server::Client module
 
 =head1 DESCRIPTION
 
