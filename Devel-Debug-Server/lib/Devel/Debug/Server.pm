@@ -55,58 +55,58 @@ __END__
  
 =head1 SYNOPSIS
 
-#on command-line
-
-#... first launch the debug server (only once)
-
-    tom@house:debugServer.pl 
-
-    server is started...
-
-#now launch your script(s) to debug 
-
-    tom@house:debugAgent.pl path/to/scriptToDebug.pl
-
-#in case you have arguments
-
-    tom@house:debugAgent.pl path/to/scriptToDebug.pl arg1 arg2 ...
-
-#now you can send debug commands with the Devel::Debug::Server::Client module
-    $debugData = Devel::Debug::Server::Client::refreshData(); #$debugData contains all debugging processes infos
-
-#get the debug infos for process $processToDebugPID
-    $processInfos = $debugData->{processesInfo}{$processToDebugPID};
-
-#check if process is halted
-    if($processInfos->{halted} == 1){
-        print("process is halted.\n");
-    }
-
-#check if process is finished
-
-    if($processInfos->{finished} == 1){
-        print("process is finished.\n");
-    }
-
-#set a breakpoint on line 9
-    Devel::Debug::Server::Client::breakPoint($pathToPerlFile,9);
-#remove breakpoint line 14
-    Devel::Debug::Server::Client::removeBreakPoint($scriptPath,14);
-
-#now run the process
-    Devel::Debug::Server::Client::run($processToDebugPID)
-
-#return from current subroutine
-    Devel::Debug::Server::Client::return($processToDebugPID);
-
-#eval an expression in the process context
-    Devel::Debug::Server::Client::eval($processToDebugPID,'$variable = 0');
-
-#now time to do one step
-    Devel::Debug::Server::Client::step($processToDebugPID);
-
-#suspend a running process
-    Devel::Debug::Server::Client::suspend($processToDebug); 
+	#on command-line
+	
+	#... first launch the debug server (only once)
+	
+	tom@house:debugServer.pl 
+	
+	server is started...
+	
+	#now launch your script(s) to debug 
+	
+	tom@house:debugAgent.pl path/to/scriptToDebug.pl
+	
+	#in case you have arguments
+	
+	tom@house:debugAgent.pl path/to/scriptToDebug.pl arg1 arg2 ...
+	
+	#now you can send debug commands with the Devel::Debug::Server::Client module
+	$debugData = Devel::Debug::Server::Client::refreshData(); #$debugData contains all debugging processes infos
+	
+	#get the debug infos for process $processToDebugPID
+	$processInfos = $debugData->{processesInfo}{$processToDebugPID};
+	
+	#check if process is halted
+	if($processInfos->{halted} == 1){
+	    print("process is halted.\n");
+	}
+	
+	#check if process is finished
+	
+	if($processInfos->{finished} == 1){
+	    print("process is finished.\n");
+	}
+	
+	#set a breakpoint on line 9
+	Devel::Debug::Server::Client::breakPoint($pathToPerlFile,9);
+	#remove breakpoint line 14
+	Devel::Debug::Server::Client::removeBreakPoint($scriptPath,14);
+	
+	#now run the process
+	Devel::Debug::Server::Client::run($processToDebugPID)
+	
+	#return from current subroutine
+	Devel::Debug::Server::Client::return($processToDebugPID);
+	
+	#eval an expression in the process context
+	Devel::Debug::Server::Client::eval($processToDebugPID,'$variable = 0');
+	
+	#now time to do one step
+	Devel::Debug::Server::Client::step($processToDebugPID);
+	
+	#suspend a running process
+	Devel::Debug::Server::Client::suspend($processToDebug); 
 
 =head1 DESCRIPTION
 
