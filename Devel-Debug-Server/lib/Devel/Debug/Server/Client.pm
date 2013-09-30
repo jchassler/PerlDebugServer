@@ -8,7 +8,7 @@ use Devel::Debug::Server;
 
 # ABSTRACT: the client module for the GUI or CLI client
 
-=head2  refreshData
+=method  refreshData
 
 return all data necessary to display screen
 
@@ -20,7 +20,7 @@ sub refreshData {
     return sendCommand($req); #we just send a void command
 }
 
-=head2  sendCommand
+=method  sendCommand
 
 send a command to the debug server to process whose pid is $pid. 
 Returns the debug informations of the server.
@@ -50,7 +50,7 @@ sub sendCommand {
    
 }
 
-=head2  step
+=method  step
 
 step($pid) : send the step command to the processus of pid $pid
 Return the debug informations
@@ -65,7 +65,7 @@ sub step {
 }
 
 
-=head2  breakpoint
+=method  breakpoint
 
 breakpoint($file,$line) : set breakpoint 
 
@@ -80,7 +80,7 @@ sub breakPoint {
     });
 }
 
-=head2  removeBreakPoint
+=method  removeBreakPoint
 
 removeBreakPoint($file,$line)
 
@@ -95,7 +95,7 @@ sub removeBreakPoint {
     });
 }
 
-=head2  run
+=method  run
 
 run() : continue program execution until breakpoint
 
@@ -106,7 +106,7 @@ sub run {
             { command => $Devel::Debug::Server::RUN_COMMAND, });
 }
 
-=head2  suspend
+=method  suspend
 
 suspend the running process
 
@@ -116,7 +116,7 @@ sub suspend {
     return Devel::Debug::Server::Client::sendCommand($pid,
             { command => $Devel::Debug::Server::SUSPEND_COMMAND });
 }
-=head2  return
+=method  return
 
 return($pid,$returnedValue) : cause script of pid $pid to return of current subroutine. Optionnaly you can specify the value returned with $returnedValue.
 
@@ -132,7 +132,7 @@ sub return {
 }
 
 
-=head2  eval
+=method  eval
 
 eval($pid,$expression) : eval perl code contained into $expression in the script of pid $pid and returns the result
 

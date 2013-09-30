@@ -13,27 +13,28 @@ Devel::Debug::Server::Agent::loop($commandToLaunch);
 __END__
  
  
-=head1 SYNOPSIS
+=head1 synopsis
 
-#on command-line
+	#on command-line
+	
+	#... first launch the debug server (only once)
+	
+	tom@house:debugserver.pl 
+	
+	server is started...
+	
+	#now launch your script(s) to debug 
+	
+	tom@house:debugagent.pl path/to/scripttodebug.pl
+	
+	#in case you have arguments
+	
+	tom@house:debugagent.pl path/to/scripttodebug.pl arg1 arg2 ...
+	
+	#now you can send debug commands with the devel::debug::server::client module
 
-#... first launch the debug server (only once)
+=head1 description
 
-tom@house:debugServer.pl 
+to debug a perl script, simply start the server and launch the script with debugagent.pl.
 
-server is started...
-
-#now launch your script(s) to debug 
-
-tom@house:debugAgent.pl path/to/scriptToDebug.pl
-
-#in case you have arguments
-
-tom@house:debugAgent.pl path/to/scriptToDebug.pl arg1 arg2 ...
-
-#now you can send debug commands with the Devel::Debug::Server::Client module
-
-=head1 DESCRIPTION
-
-To debug a perl script, simply start the server and launch the script with debugAgent.pl.
-
+See L<Devel::Debug::Server> for more informations.

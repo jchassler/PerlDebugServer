@@ -72,6 +72,7 @@ __END__
 	tom@house:debugAgent.pl path/to/scriptToDebug.pl arg1 arg2 ...
 	
 	#now you can send debug commands with the Devel::Debug::Server::Client module
+    #in your debuggerGUI.pl...
 	$debugData = Devel::Debug::Server::Client::refreshData(); #$debugData contains all debugging processes infos
 	
 	#get the debug infos for process $processToDebugPID
@@ -125,7 +126,6 @@ This module aims at providing a convenient base be to develop one or more GUI cl
 
 Currently there are no GUI clients available.
 
-A first version of the server is now available.
 
 One can launch one server and debug as many processes as he wants :
 - all debugging informations are centralized by the server
@@ -133,7 +133,30 @@ One can launch one server and debug as many processes as he wants :
 
 For example, the tests script "01-debug-script.t" launch a debug server and 3 processes. All processes are being debugged at the same time (breakpoints are set for all processes).
 
-Limitations :
+=head1 Architecture
+
+There is one client process that send commands and retrieve data from the server process ; the tests scripts are client processes. 
+Server process receives messages from the processes to debug and gives them commands. The server can also send signal in order to check if a process is alive or to halt it (like ctrl+C on perl debugger).
+The processes to debug register automatically to the server on startup and wait for command (at least the run command).
+All communications are managed using simple messages on localhost:5000 (zeroMq library).
+
+=begin text
+
+
+------------------  ZMQ   ----------------  ZMQ    --------------------
+| client process |  ----> |server process|<--------|process to debug 1|
+------------------        |  (port 5000) |         --------------------
+                          ----------------                        
+                                        ^   ZMQ     --------------------
+                                        ------------|process to debug 2|
+                                                    --------------------
+
+=end text
+
+=head1 Limitations :
+
 Works only for linux systems (should be possible to make it works for windows)
 No GUI client available today.
 It doesn't manage for now forking processes.
+It doesn't manage threads.
+
