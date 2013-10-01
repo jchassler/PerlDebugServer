@@ -8,6 +8,7 @@ perl:
    - 5.10
 before_install:
    - cd Devel-Debug-Server
+   - sudo apt-get install libzmq-dev
    - export AUTOMATED_TESTING=1 HARNESS_OPTIONS=j10:c HARNESS_TIMER=1
    - git config --global user.name "TravisCI"
    - git config --global user.email $HOSTNAME":not-for-mail@travis-ci.org"
