@@ -140,18 +140,29 @@ Server process receives messages from the processes to debug and gives them comm
 The processes to debug register automatically to the server on startup and wait for command (at least the run command).
 All communications are managed using simple messages on localhost:5000 (zeroMq library).
 
-=begin text
 
 
-------------------  ZMQ   ----------------  ZMQ    --------------------
-| client process |  ----> |server process|<--------|process to debug 1|
-------------------        |  (port 5000) |         --------------------
-                          ----------------                        
-                                        ^   ZMQ     --------------------
-                                        ------------|process to debug 2|
-                                                    --------------------
+    ------------------ ZMQ   ----------------  ZMQ   --------------------
+    | client process | ----> |server process|<-------|process to debug 1|
+    ------------------       |  (port 5000) |        --------------------
+                             ----------------                       
+                                            ^  ZMQ --------------------
+                                            -------|process to debug 2|
+                                                   --------------------
 
-=end text
+
+=head1 Asynchrounous design
+
+All communications between all component are asynchronous in order nobody waits for a dead process.
+This means all command are sent without waiting the result. 
+
+For example :
+- client process sends a "eval" command to the server and server aknowledges the message
+- then server is waiting for the target process to request some new commands to send the "eval" (updating its informations the same way)
+- process to debug execute the "eval" command and generates a new request to the server to update the "lastEvalResult" for this PID in server process memory
+- next time client process will call "refreshData", it will get the process informations with "eval" command result.
+
+As a conclusion, client process need to regular call "refreshData" to maintain usefull information on screen.
 
 =head1 Limitations :
 
@@ -159,4 +170,12 @@ Works only for linux systems (should be possible to make it works for windows)
 No GUI client available today.
 It doesn't manage for now forking processes.
 It doesn't manage threads.
+
+=head1 SEE ALSO
+
+L<Devel::Debug::Server::Client>
+
+L<debugAgent.pl>
+
+L<debugServer.pl>
 

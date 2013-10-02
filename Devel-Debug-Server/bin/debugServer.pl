@@ -329,5 +329,7 @@ This script launch the debug server which centralizes all debugging informations
 Breakpoints are set/unset for all processes.
 All command are asynchronous, which means you send a command to the server which will aknowledge you immediatly. You need to ask the server later to see the process state changed.
 
+=head1 SEE ALSO
+
 See L<Devel::Debug::Server> for more informations.
 

@@ -37,4 +37,6 @@ __END__
 
 to debug a perl script, simply start the server and launch the script with debugagent.pl.
 
+=head1 SEE ALSO
+
 See L<Devel::Debug::Server> for more informations.
