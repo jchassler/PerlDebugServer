@@ -10,10 +10,11 @@ use Devel::Debug::Server::Agent;
 my $commandToLaunch = join(' ',@ARGV);
 Devel::Debug::Server::Agent::loop($commandToLaunch);
 
+1;
 __END__
  
  
-=head1 synopsis
+=head1 SYNOPSIS
 
 	#on command-line
 	
@@ -33,7 +34,7 @@ __END__
 	
 	#now you can send debug commands with the devel::debug::server::client module
 
-=head1 description
+=head1 DESCRIPTION
 
 to debug a perl script, simply start the server and launch the script with debugagent.pl.
 

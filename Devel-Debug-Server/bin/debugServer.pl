@@ -305,7 +305,8 @@ while (1) {
 
 1;
 
-=head1 synopsis
+__END__
+=head1 SYNOPSIS
 
 	#on command-line
 	
@@ -322,7 +323,7 @@ while (1) {
 	
 ...now you can send debug commands with the L<Devel::Debug::Server::Client>  module
 
-=head1 description
+=head1 DESCRIPTION
 
 This script launch the debug server which centralizes all debugging informations and commands for all processes. This server can be driven by a client process which uses L<Devel::Debug::Server::Client> to communicate.
 
